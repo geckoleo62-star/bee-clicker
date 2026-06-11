@@ -53,3 +53,8 @@ export const DONATOR_CODES = {
     "ROYALTY":     { tier: 3, message: "Code Souverain activé ! 🎨" },
     "ULTIMATE":    { tier: 4, message: "Code Bienfaiteur Suprême activé ! ⚡" }
 };
+
+// Équilibrage Abeille d'Or
+export const GOLDEN_BEE_REWARD_SECONDS = 10; // Secondes de production offertes
+export const GOLDEN_BEE_FRENZY_DURATION = 12; // Durée de la frénésie en secondes
+export const FRENZY_PROD_MULTIPLIER = 5;      // Multiplicateur de production pendant la frénésie
