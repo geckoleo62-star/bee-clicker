@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bee Clicker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="weather-overlay" class="weather-overlay-hidden"></div>
+    <div class="game-dashboard">
+        <div class="panel left-panel">
+            <div class="ingredients-inventory">
+                <span>💧 <span id="ing-water">0</span></span>
+                <span>🌸 <span id="ing-petals">0</span></span>
+                <span>🧪 <span id="ing-nectar">0</span></span>
+            </div>
+
+            <div id="donator-badge-container" class="hidden" style="text-align: center; margin-top: 10px; margin-bottom: -5px;">
+                <span id="donator-badge" style="background: #f1c40f; color: #2c3e50; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(241, 196, 15, 0.4); display: inline-block;">👑 MÉCÈNE ROYAL</span>
+            </div>
+
+            <h1>🐝 Bee Clicker 🍯</h1>
+            <div class="ui-controls">
+                <button id="btn-wide-mode" class="ui-btn" aria-label="Changer la largeur de l'interface">📐 Mode Large</button>
+                <button id="btn-mute" class="ui-btn" aria-label="Couper ou activer le son">🔊 Son : ON</button>
+                <button id="btn-dark-mode" class="ui-btn" aria-label="Basculer le mode sombre">🌙 Mode Sombre</button>
+                <button id="btn-fullscreen" class="ui-btn" aria-label="Passer en plein écran">🖥️ Plein Écran</button>
+                <button id="btn-stats" class="ui-btn" title="Statistiques" aria-label="Voir les statistiques">📊</button>
+            </div>
+
+            <div id="prestige-display" class="hidden">
+                👑 Ascension : <span id="royal-jelly">0</span> (Boost: x<span id="prestige-multi">1</span>)<br>
+                <div id="paradigm-status" style="font-size: 10px; color: #ffd700; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">
+                    Loi actuelle : <span id="current-law">L'Aube</span>
+                </div>
+            </div>
+            
+            <div id="weather-display" class="weather-box">
+                ☀️ Météo : <span id="weather-type">Soleil</span><br>
+                <small id="weather-desc" style="font-weight: normal; opacity: 0.9;">Production +25%</small>
+                <div id="rain-status">
+                    🌧️ <span id="rain-timer-label">Prochaine pluie : --:--</span>
+                </div>
+            </div>
+            
+            <div class="level-badge">
+                Niveau <span id="player-level">1</span><br>
+                <div class="xp-bar-container">
+                    <div id="xp-bar-fill"></div>
+                </div>
+                <small>XP: <span id="exp-current">0</span> / <span id="exp-next">100</span></small>
+                <div style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 2px;">Bonus : +<span id="level-bonus-val">0</span>% 🚀</div>
+            </div>
+            
+            <div class="score-box">
+                <div class="score-display"><span id="honey">0</span> 🍯</div>
+                <div style="font-size: 10px; opacity: 0.7; margin-bottom: 5px;">Total produit : <span id="total-honey">0</span> 🍯</div>
+                <div class="cps-display">Par seconde : +<span id="hps">0</span></div>
+                <div id="frenzy-timer-display" class="frenzy-timer hidden">⚡ FRÉNÉSIE : <span id="frenzy-time">0</span>s</div>
+                <div id="combo-display" class="combo-ui hidden">🔥 COMBO x<span id="combo-count">0</span> (+<span id="combo-bonus">0</span>%)</div>
+                <div class="click-display">Par clic : +<span id="hpc">1</span></div>
+            </div>
+            
+            <button id="click-btn" class="main-btn">🌸 BUTINER</button>
+
+            <div class="activity-log">
+                <div class="log-header">Journal de la ruche</div>
+                <div id="log-container">Bienvenue dans votre nouvelle ruche !</div>
+            </div>
+        </div>
+
+        <div class="panel center-panel">
+            <h2>🐝 Ruche (<span id="total-bees">0</span>)</h2>
+            <p class="spawn-tip">
+                Frelons, abeilles d'or et diamants apparaissent à l'écran !
+            </p>
+            <div class="collection-list">
+                <div class="rarity-line common"><span class="bee-icon">🐝</span> Communes <small><span id="count-common">0</span></small></div>
+                <div class="rarity-line rare"><span class="bee-icon">🐝</span> Rares <small><span id="count-rare">0</span></small></div>
+                <div class="rarity-line legendary"><span class="bee-icon">🐝</span> Légendaires <small><span id="count-legendary">0</span></small></div>
+                <div class="rarity-line mythic"><span class="bee-icon">🐝</span> Mythiques <small><span id="count-mythic">0</span></small></div>
+                <div class="rarity-line divine"><span class="bee-icon">🐝</span> Divines <small><span id="count-divine">0</span></small></div>
+            </div>
+            
+            <div class="drop-rates-info">
+                <strong>Chances d'obtention :</strong>
+                <div id="drop-rates-display">...</div>
+            </div>
+
+            <div class="objective-section">
+                <div class="section-header">
+                    <h3>🎯 Missions</h3>
+                    <small title="Réinitialisé à chaque ascension">Bonus : +<span id="mission-prod-bonus">0</span>% | <span id="missions-completed">0</span>/<span id="missions-total">0</span> 🔄</small>
+                </div>
+                <div id="missions-list" class="mission-list"></div>
+            </div>
+
+            <div class="objective-section">
+                <div class="section-header">
+                    <h3>💎 Artefacts trouvés</h3>
+                    <small><span id="artifacts-count">0</span></small>
+                </div>
+                <div id="artifacts-list" class="artifacts-grid"></div>
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <h2>🛒 Gestion</h2>
+
+            <div class="store-tabs">
+                <button id="tab-shop" class="store-tab active" type="button">Magasin</button>
+                <button id="tab-garden" class="store-tab" type="button">Jardin</button>
+                <button id="tab-beedex" class="store-tab" type="button">Collection</button>
+                <button id="tab-potions" class="store-tab" type="button">Alchimie</button>
+            </div>
+
+            <div class="buy-amount-selector">
+                <button id="buy-x1" class="buy-amount-btn active">x1</button>
+                <button id="buy-x10" class="buy-amount-btn">x10</button>
+                <button id="buy-x25" class="buy-amount-btn">x25</button>
+                <button id="buy-x50" class="buy-amount-btn">x50</button>
+                <button id="buy-x100" class="buy-amount-btn">x100</button>
+                <button id="buy-max" class="buy-amount-btn">MAX</button>
+            </div>
+
+            <div id="shop-view" class="store-view active">
+                <div class="shop-list">
+                    <div class="upgrade-item">
+                        <div class="upgrade-info"><strong>🥚 Acheter Abeille</strong><small>Coût: <span id="cost-bees">50</span></small></div>
+                        <button id="btn-buy-bee">Acheter</button>
+                    </div>
+                    
+                    <div class="upgrade-item">
+                        <div class="upgrade-info"><strong>💪 Améliorer Clic</strong><small>Puissance +1 | Niveau <span id="lvl-click">1</span> | Coût: <span id="cost-click">150</span></small></div>
+                        <button id="btn-buy-click">Améliorer</button>
+                    </div>
+
+                    <div id="item-honeycomb" class="upgrade-item evolution-item">
+                        <div class="upgrade-info"><strong>🍯 Rayons renforcés</strong><small>Production +2% | Nv <span id="lvl-honeycomb">0</span> | Coût: <span id="cost-honeycomb">1000</span></small></div>
+                        <button id="btn-buy-honeycomb">Renforcer</button>
+                    </div>
+
+                    <div id="item-nectar" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>✨ Nectar chanceux</strong><small>Chance +0.1 ✨ | Nv <span id="lvl-nectar">0</span> | Coût: <span id="cost-nectar">7500</span></small></div>
+                        <button id="btn-buy-nectar">Infuser</button>
+                    </div>
+
+                    <div id="item-dance" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🧭 Danse des butineuses</strong><small>Production +2% | Nv <span id="lvl-dance">0</span> | Coût: <span id="cost-dance">2500</span></small></div>
+                        <button id="btn-buy-dance">Former</button>
+                    </div>
+
+                    <div id="item-gloves" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>👑 Gants de la Reine</strong><small>Clic +5% | Nv <span id="lvl-gloves">0</span> | Coût: <span id="cost-gloves">4000</span></small></div>
+                        <button id="btn-buy-gloves">Forger</button>
+                    </div>
+
+                    <div id="item-filter" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🌪️ Filtre à Pollen</strong><small>Production +2% | Nv <span id="lvl-filter">0</span> | Coût: <span id="cost-filter">15000</span></small></div>
+                        <button id="btn-buy-filter">Installer</button>
+                    </div>
+
+                    <div id="item-mead" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🍷 Hydromel Royal</strong><small>Production +3% | Nv <span id="lvl-mead">0</span> | Coût: <span id="cost-mead">30000</span></small></div>
+                        <button id="btn-buy-mead">Brasser</button>
+                    </div>
+
+                    <div id="item-stinger" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🗡️ Dard de précision</strong><small>Clic +6% | Nv <span id="lvl-stinger">0</span> | Coût: <span id="cost-stinger">75000</span></small></div>
+                        <button id="btn-buy-stinger">Aiguiser</button>
+                    </div>
+
+                    <div id="item-hivenet" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🌐 Réseau de Ruches</strong><small>Production +3% | Nv <span id="lvl-hivenet">0</span> | Coût: <span id="cost-hivenet">180000</span></small></div>
+                        <button id="btn-buy-hivenet">Connecter</button>
+                    </div>
+
+                    <div id="item-wax" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🕯️ Cire de Protection</strong><small>Production +4% | Nv <span id="lvl-wax">0</span> | Coût: <span id="cost-wax">450000</span></small></div>
+                        <button id="btn-buy-wax">Appliquer</button>
+                    </div>
+
+                    <div id="item-jelly" class="upgrade-item evolution-item hidden">
+                        <div class="upgrade-info"><strong>🧪 Gelée Royale Pure</strong><small>Production +5% | Nv <span id="lvl-jelly">0</span> | Coût: <span id="cost-jelly">1500000</span></small></div>
+                        <button id="btn-buy-jelly">Concentrer</button>
+                    </div>
+
+                    <div id="celestial-upgrade-item" class="upgrade-item celestial hidden">
+                        <div class="upgrade-info"><strong>🧬 Phéromones</strong><small>Toutes abeilles +5% | Nv <span id="lvl-prestige-boost">0</span> | Coût: <span id="cost-prestige-boost">1500</span></small></div>
+                        <button id="btn-buy-prestige-boost">Acheter</button>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <strong>⚡ Maîtrise Céleste</strong>
+                            <small>Points: <span id="mastery-points">0</span></small>
+                            <small style="color: #8e44ad; font-weight: bold;">Total: +<span id="mastery-click-total">0</span> 🖱️ | +<span id="mastery-luck-total">0</span> ✨</small>
+                        </div>
+                        <button id="buy-mastery-click" title="Ajoute +1 à la puissance de clic de base">+1 Clic</button>
+                        <button id="buy-mastery-luck" title="Ajoute +0.1 à la chance de base">+0.1 ✨</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="garden-view" class="store-view">
+                <h3 class="garden-title">🌻 Jardin Botanique</h3>
+                <div class="garden-notice">✨ Note : Le jardin est permanent et n'est pas réinitialisé lors de l'ascension !</div>
+                <div class="bonus-summary-box garden-summary">
+                    🟤+<span id="garden-common-bonus">0</span>% | 🔵+<span id="garden-rare-bonus">0</span>% | 🟠+<span id="garden-leg-bonus">0</span>% <br>
+                    🔴+<span id="garden-mythic-bonus">0</span>% | 🟣+<span id="garden-divine-bonus">0</span>%
+                </div>
+
+                <div class="shop-list">
+                    <div id="flower-lavender" class="upgrade-item flower-item">
+                        <div class="upgrade-info"><strong style="color: #8e44ad;">🪻 Lavande</strong><small>Communes +5% | Nv <span id="lvl-lavender">0</span> | Coût: <span id="cost-lavender">600</span></small></div>
+                        <button id="btn-buy-lavender">Planter</button>
+                    </div>
+                    <div id="flower-sunflower" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #d4ac0d;">🌻 Tournesol</strong><small>Rares +5% | Nv <span id="lvl-sunflower">0</span> | Coût: <span id="cost-sunflower">3000</span></small></div>
+                        <button id="btn-buy-sunflower">Planter</button>
+                    </div>
+                    <div id="flower-rose" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #c0392b;">🌹 Rose</strong><small>Légend. +5% | Nv <span id="lvl-rose">0</span> | Coût: <span id="cost-rose">15000</span></small></div>
+                        <button id="btn-buy-rose">Planter</button>
+                    </div>
+                    <div id="flower-daisy" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #f1c40f;">🌼 Marguerite</strong><small>Mythiques +5% | Nv <span id="lvl-daisy">0</span> | Coût: <span id="cost-daisy">45000</span></small></div>
+                        <button id="btn-buy-daisy">Planter</button>
+                    </div>
+                    <div id="flower-orchid" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #af7ac5;">🌸 Orchidée</strong><small>Divines +5% | Nv <span id="lvl-orchid">0</span> | Coût: <span id="cost-orchid">120000</span></small></div>
+                        <button id="btn-buy-orchid">Planter</button>
+                    </div>
+                    <div id="flower-lily" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #ebf5fb;">⚜️ Lys</strong><small>Communes +8% | Nv <span id="lvl-lily">0</span> | Coût: <span id="cost-lily">300000</span></small></div>
+                        <button id="btn-buy-lily">Planter</button>
+                    </div>
+                    <div id="flower-tulip" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #ec7063;">🌷 Tulipe</strong><small>Rares +8% | Nv <span id="lvl-tulip">0</span> | Coût: <span id="cost-tulip">800000</span></small></div>
+                        <button id="btn-buy-tulip">Planter</button>
+                    </div>
+                    <div id="flower-poppy" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #e74c3c;">🌺 Coquelicot</strong><small>Légend. +8% | Nv <span id="lvl-poppy">0</span> | Coût: <span id="cost-poppy">2500000</span></small></div>
+                        <button id="btn-buy-poppy">Planter</button>
+                    </div>
+                    <div id="flower-lotus" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #aed6f1;">🪷 Lotus</strong><small>Mythiques +8% | Nv <span id="lvl-lotus">0</span> | Coût: <span id="cost-lotus">12000000</span></small></div>
+                        <button id="btn-buy-lotus">Planter</button>
+                    </div>
+                    <div id="flower-hibiscus" class="upgrade-item flower-item hidden">
+                        <div class="upgrade-info"><strong style="color: #fd79a8;">💮 Hibiscus</strong><small>Divines +8% | Nv <span id="lvl-hibiscus">0</span> | Coût: <span id="cost-hibiscus">60000000</span></small></div>
+                        <button id="btn-buy-hibiscus">Planter</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="potion-view" class="store-view">
+                <h3 class="garden-title">🧪 Laboratoire d'Alchimie</h3>
+                <p style="font-size: 11px; text-align: center; margin-bottom: 10px; color: #636e72;">
+                    Récoltez l'eau, les pétales et le nectar lors des <strong>pluies magiques</strong> (toutes les 10-15 min).
+                </p>
+                <div class="shop-list">
+                    <div class="upgrade-item evolution-item">
+                        <div class="upgrade-info">
+                            <strong>🍯 Potion de Miel</strong>
+                            <small>Prod x2 (60s) | <span class="recipe">💧40 🌸60 🧪20 + 5min de Prod</span></small>
+                            <small>Stock: <span id="potion-count-honey">0</span> <span id="potion-timer-honey" class="potion-timer"></span></small>
+                        </div>
+                        <div class="potion-controls">
+                            <button id="btn-buy-pot-honey">Fabriquer</button>
+                            <button id="btn-use-pot-honey" class="btn-use">Boire</button>
+                        </div>
+                    </div>
+                    <div class="upgrade-item evolution-item">
+                        <div class="upgrade-info">
+                            <strong>💪 Potion de Force</strong>
+                            <small>Clic x3 (30s) | <span class="recipe">💧25 🌸40 🧪10 + 2min de Prod</span></small>
+                            <small>Stock: <span id="potion-count-click">0</span> <span id="potion-timer-click" class="potion-timer"></span></small>
+                        </div>
+                        <div class="potion-controls">
+                            <button id="btn-buy-pot-click">Fabriquer</button>
+                            <button id="btn-use-pot-click" class="btn-use">Boire</button>
+                        </div>
+                    </div>
+                    <div class="upgrade-item evolution-item">
+                        <div class="upgrade-info">
+                            <strong>✨ Potion de Chance</strong>
+                            <small>Chance +20 (60s) | <span class="recipe">💧100 🌸150 🧪50 + 15min de Prod</span></small>
+                            <small>Stock: <span id="potion-count-luck">0</span> <span id="potion-timer-luck" class="potion-timer"></span></small>
+                        </div>
+                        <div class="potion-controls">
+                            <button id="btn-buy-pot-luck">Fabriquer</button>
+                            <button id="btn-use-pot-luck" class="btn-use">Boire</button>
+                        </div>
+                    </div>
+                    <div class="upgrade-item evolution-item" style="margin-top: 15px;">
+                        <div class="upgrade-info"><strong>🌧️ Forcer une Pluie</strong><small>Coût: <span id="cost-force-rain">0</span> 🍯</small></div>
+                        <button id="btn-force-rain">Déclencher</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="beedex-view" class="store-view">
+                <h3 class="garden-title">🖼️ Beedex Céleste</h3>
+                <div id="beedex-list" class="beedex-grid"></div>
+            </div>
+
+            <div class="milestones-section" style="margin-top: 10px;">
+                <h3>Paliers de la Reine 👑</h3>
+                <div id="milestone-1" class="milestone locked">🔒 100 🍯 : Clic automatique</div>
+                <div id="milestone-2" class="milestone locked">🔒 1000 🍯 : Super Clic automatique (x5 ⚡)</div>
+            </div>
+
+            <div class="prestige-box" style="margin-top: 10px;">
+                <h3>Temple de l'Ascension 🚀</h3>
+                <p>Coût : <span id="prestige-cost-display">25000</span> 🍯</p>
+                <p class="mastery-preview">Maîtrise gagnée : <span id="prestige-mastery-preview">0</span></p>
+                <p id="next-mastery-info" style="font-size: 10px; opacity: 0.8;"></p>
+                <button id="prestige-btn" disabled>S'élever !</button>
+            </div>
+
+            <div class="bonus-summary-box" style="margin-top: 10px;">
+                🚀 Prod : +<span id="shop-total-bonus">0</span>% | 🖱️ Clic : +<span id="shop-click-bonus">0</span>% | ✨ Chance : +<span id="shop-luck-bonus">0</span>
+            </div>
+
+            <div class="save-management" style="margin-top: 15px; display: flex; gap: 5px;">
+                <button id="btn-export" class="ui-btn" style="flex: 1; font-size: 11px;">📤 Exporter</button>
+                <button id="btn-import" class="ui-btn" style="flex: 1; font-size: 11px;">📥 Importer</button>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button id="btn-secret-code" class="ui-btn" style="width: 100%; background: var(--rarity-divine); color: white; font-weight: bold; animation: divineGlowDark 2s infinite alternate;">🔑 Activer un Code Mécène</button>
+            </div>
+
+            <button id="reset-btn" class="danger-btn" style="margin-top: 15px;">Tout Effacer</button>
+        </div>
+    </div>
+
+    <footer class="game-footer">
+        &copy; 2026 Bee Clicker - Par geckoleo | v1.0.2
+    </footer>
+
+    <!-- Fenêtre Modale des Statistiques -->
+    <div id="stats-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="close-stats" class="close-button">&times;</span>
+            <h2>📈 Statistiques Royales</h2>
+            <ul class="stats-list">
+                <li>Miel produit (total) : <span id="stat-total-honey">0</span> 🍯</li>
+                <li>Clics totaux : <span id="stat-total-clicks">0</span> 🖱️</li>
+                <li>Temps de jeu : <span id="stat-total-time">0</span> ⏱️</li>
+                <li>Ascensions : <span id="stat-total-ascensions">0</span> 🚀</li>
+                <li>Abeilles achetées : <span id="stat-total-bees">0</span> 🐝</li>
+                <li>Fleurs plantées : <span id="stat-total-flowers">0</span> 🌻</li>
+                <li>Frelons repoussés : <span id="stat-total-hornets">0</span> ⚔️</li>
+                <li>Artefacts trouvés : <span id="stat-total-artifacts">0</span> 💎</li>
+                <li>Recettes fabriquées : <span id="stat-total-potions">0</span> 🧪</li>
+            </ul>
+            <div style="margin-top: 20px; font-size: 10px; text-align: center; opacity: 0.6; border-top: 1px solid #eee; padding-top: 10px;">
+                &copy; 2026 - Tous droits réservés.
+            </div>
+        </div>
+    </div>
+
+    <div id="hornet" class="hidden">
+        <div id="hornet-clicks">5</div>
+        <span style="font-size: 50px;">🐝</span>
+    </div>
+    
+    <div id="notification-container"></div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
