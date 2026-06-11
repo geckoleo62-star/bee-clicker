@@ -270,10 +270,10 @@ export function spawnGoldenBee() {
         Utils.playSound('golden');
         const nacreBonus = 1 + ((Formulas.getArtifactCounts()["Aile de Nacre"] || 0) * 0.20);
 
-        const reward = Formulas.getBaseCps() * Formulas.getPrestigeMultiplier() * 10 * nacreBonus; 
+        const reward = Formulas.getBaseCps() * Formulas.getPrestigeMultiplier() * Constants.GOLDEN_BEE_REWARD_SECONDS * nacreBonus; 
         gameState.discoveredBees.golden = true;
         Formulas.addHoney(reward);
-        gameState.activePotions.frenzy = 12;
+         gameState.activePotions.frenzy = Constants.GOLDEN_BEE_FRENZY_DURATION;
         Utils.showNotification(`⚡ ABEILLE D'OR ! +${Utils.formatNumber(reward)} 🍯 et FRÉNÉSIE x5 (12s) !`, "frenzy");
         bee.remove();
         UI.updateDisplay();
