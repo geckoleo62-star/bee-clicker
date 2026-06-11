@@ -110,7 +110,7 @@ export function getBaseCps() {
     const beedexBonus = getBeedexBonus();
 
     let potionBonus = gameState.activePotions.honey > 0 ? 2 : 1;
-    let frenzyBonus = gameState.activePotions.frenzy > 0 ? 5 : 1;
+     let frenzyBonus = gameState.activePotions.frenzy > 0 ? Constants.FRENZY_PROD_MULTIPLIER : 1;
 
     const levelMultiplier = 1 + (gameState.level - 1) * 0.01;
     const comboMultiplier = 1 + (Math.min(gameState.comboCount || 0, 25) * 0.01);
