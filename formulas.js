@@ -262,7 +262,8 @@ export function calculateBulkPurchase(currentCost, currentLvl, buyAmount, multip
     let tempCost = currentCost;
     let levelsBought = 0;
     
-    let limit = (buyAmount === -1) ? Infinity : buyAmount;
+    // Sécurité : limite à 1000 niveaux max pour éviter de geler le navigateur en cas de coût nul
+    let limit = (buyAmount === -1) ? 1000 : buyAmount;
 
     while (levelsBought < limit && (currentLvl + levelsBought) < maxLvl) {
         if (gameState.honey >= totalCost + tempCost) {
@@ -559,9 +560,13 @@ export function resetGame() {
     }
 }
 
-export function forceRain() {
+export function getForceRainCost() {
     const currentHPS = getBaseCps() * getPrestigeMultiplier();
-    const cost = Math.max(currentHPS * 600, 500000); // Coût : 10 minutes de HPS, min 500k
+    return Math.max(currentHPS * 600, 500000); // Coût : 10 minutes de HPS, min 500k
+}
+
+export function forceRain() {
+    const cost = getForceRainCost();
 
     if (gameState.honey >= cost) {
         if (confirm(`Voulez-vous dépenser ${Utils.formatNumber(cost)} 🍯 pour déclencher une pluie d'ingrédients maintenant ?`)) {
