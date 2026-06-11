@@ -221,7 +221,7 @@ export function updateDisplay() {
     // Effet visuel de frénésie sur le bouton BUTINER
     toggleClass("click-btn", "frenzy-active-btn", gameState.activePotions.frenzy > 0);
 
-    const forceRainCost = Formulas.getBulkCost('forceRainCost', 'forceRainLvl', 1.0); // Coût dynamique
+    const forceRainCost = Formulas.getForceRainCost(); // Utilise le coût réel calculé
     setTxt("cost-force-rain", Utils.formatNumber(forceRainCost));
     setBtn("btn-force-rain", gameState.honey < forceRainCost);
 
