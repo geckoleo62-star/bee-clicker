@@ -571,6 +571,13 @@ export function renderMissions() {
 
     // Rendre les missions permanentes ensuite
     if (permanentMissions.length > 0) {
+        // Ajout de la ligne séparatrice jaune
+        const separator = document.createElement("hr");
+        separator.style.margin = "15px 0 10px 0";
+        separator.style.borderColor = "#f1c40f";
+        separator.style.opacity = "0.4";
+        fragment.appendChild(separator);
+
         const pTitle = document.createElement("div");
         pTitle.className = "mission-section-title permanent-title";
         pTitle.innerText = "Objectifs Permanents (Carrière)";

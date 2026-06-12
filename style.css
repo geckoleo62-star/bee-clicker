@@ -649,7 +649,7 @@ body.dark-mode #rain-status {
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
-    color: #95a5a6;
+    color: #2980b9; /* Bleu pour les missions saisonnières */
     margin: 12px 0 6px 4px;
     letter-spacing: 1px;
 }
