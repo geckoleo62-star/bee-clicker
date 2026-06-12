@@ -6,8 +6,6 @@
 import { gameState, internalVars } from './state.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
-import * as UI from './ui.js';
-import * as Storage from './storage.js';
 
 export const MAX_LUCK_CAP = 50; // Augmentation du plafond pour laisser de la place à la progression
 
@@ -70,7 +68,7 @@ export function getFlowerTierBonus(lvl1, lvl2) {
 }
 
 export function getPrestigeMultiplier() {
-    return Math.pow(2.3, gameState.royalJelly); // Ajusté pour une courbe de progression plus longue (cible Ascension 25)
+    return Math.pow(2.1, gameState.royalJelly); // Réduit légèrement pour freiner l'inflation de puissance brute
 }
 
 export function getBaseCps() {
@@ -99,7 +97,7 @@ export function getBaseCps() {
         
         // Application d'un amortissement sur la synergie pour éviter l'explosion en late-game
         let flowerSynergy = boostCommon * boostRare * boostLegendary * boostMythic * boostDivine * globalFlowerMult;
-        base = rawProd * Math.pow(flowerSynergy, 0.45); // Réduit à 0.45 pour freiner l'explosion des bonus de fleurs croisés
+        base = rawProd * Math.pow(flowerSynergy, 0.38); // Réduit de 0.45 à 0.38 pour mieux contrôler les synergies croisées
         
         if (paradigm.id === "divine") {
             base *= Math.pow(1.001, getTotalBees()); // Réduit de 0.2% à 0.1% par abeille pour le multiplicateur composé
@@ -206,7 +204,6 @@ export function addHoney(amount) {
     gameState.totalHoneyProduced += amount;
     if (gameState.honey > gameState.maxHoneyReached) {
         gameState.maxHoneyReached = gameState.honey;
-        const honeyDisplayDiv = UI.ui["honey"]?.parentElement; 
     }
     if (gameState.honey > gameState.highestHoneyEver) {
         gameState.highestHoneyEver = gameState.honey;
@@ -240,7 +237,6 @@ export function addExp(amount) {
         if (gameState.level % 10 === 0) {
             gameState.masteryPoints++;
             Utils.showNotification("🎁 Récompense de palier : +1 Point de Maîtrise !", "divine");
-            Storage.flushSave(); // Sécurité : sauvegarde immédiate du point de maîtrise
         }
         levelsGained++;
     }
@@ -302,7 +298,6 @@ export function performBulkPurchase(costKey, lvlKey, multiplier, notificationMsg
         gameState[costKey] = newCost;
         if (specificUpdates) specificUpdates(levelsBought);
         Utils.showNotification(`${notificationMsg} (${levelsBought} fois)`);
-        UI.updateDisplay(); Storage.queueSave();
     } else {
         Utils.showNotification("Miel insuffisant pour cet achat.");
     }
@@ -327,7 +322,6 @@ export function buyPotion(type) {
 
         gameState.potions[type]++;
         Utils.showNotification(`🧪 Potion de ${type} fabriquée !`);
-        UI.updateDisplay(); Storage.queueSave();
     } else {
         Utils.showNotification(`Manque de ressources ! Requis: 💧${recipe.water}, 🌸${recipe.petals}, 🧪${recipe.nectar} et ${Utils.formatNumber(honeyCost)} 🍯`);
     }
@@ -343,7 +337,6 @@ export function usePotion(type) {
         gameState.totalPotionsUsed = (gameState.totalPotionsUsed || 0) + 1;
         gameState.activePotions[type] = type === 'click' ? 30 : 60;
         Utils.showNotification(`✨ Potion activée !`);
-        UI.updateDisplay(); Storage.queueSave();
     }
 }
 
@@ -373,7 +366,6 @@ export function handleManualClick(e) {
         
         internalVars.comboTimeout = setTimeout(() => {
             gameState.comboCount = 0;
-            UI.updateDisplay();
         }, 2000);
     }
 
@@ -413,7 +405,6 @@ export function buyBee() {
             counts.divine++;
             gameState.pityCounter = 0;
             Utils.showNotification("✨ INCROYABLE : Une Abeille Divine !", "divine");
-            Storage.flushSave(); // CRITIQUE : Sauvegarde immédiate pour une Divine
         }
         else if (roll < rarityThresholds.mythic) {
             gameState.beesMythic++; 
@@ -421,7 +412,6 @@ export function buyBee() {
             counts.mythic++;
             gameState.pityCounter = Math.max(0, gameState.pityCounter - 25); // Une mythique réduit la pitié sans la supprimer
             if (limit < 10) Utils.showNotification("🚩 Rare : Une Abeille Mythique !", "mythic");
-            Storage.flushSave(); // CRITIQUE : Sauvegarde immédiate pour une Mythique
         }
         else if (roll < rarityThresholds.legendary) { 
             gameState.beesLegendary++; 
@@ -518,7 +508,7 @@ export function prestige() {
             gameState.jellyLvl = 0;
             gameState.prestigeBoostLevel = 0;
 
-            let inflation = Math.pow(2.4, gameState.royalJelly); // Inflation des prix de base plus cohérente avec le bonus de prestige
+            let inflation = Math.pow(2.8, gameState.royalJelly); // Inflation augmentée à 2.8 pour rendre le début de chaque ascension plus tactique
             gameState.beeCost = 50 * inflation;
             gameState.clickCost = 150 * inflation;
             
@@ -534,7 +524,6 @@ export function prestige() {
             gameState.jellyCost = 1500000 * inflation;
             gameState.prestigeBoostCost = 1500 * inflation;
 
-            Storage.flushSave();
             return true; // Indique au script.js que l'ascension a eu lieu
         }
     }
@@ -596,7 +585,4 @@ export function redeemCode() {
 
     Utils.showNotification(codeData.message, "success");
     Utils.addLog(`🎁 Code utilisé : <b>${upperCode}</b>`, "success");
-    
-    UI.updateDisplay();
-    Storage.queueSave();
 }

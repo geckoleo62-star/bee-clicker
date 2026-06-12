@@ -12,8 +12,18 @@ function init() {
 
     // Gestionnaire d'erreurs global pour la version publique
     window.onerror = (msg, url, line) => {
+        // Ignorer les erreurs connues causées par les extensions Chrome
+        if (typeof msg === 'string' && msg.includes("message channel closed")) return true;
+        
         Utils.handleError(`${msg} at ${line}`);
         return false;
+    };
+
+    // Gestion des promesses rejetées (comme l'erreur que vous voyez)
+    window.onunhandledrejection = (event) => {
+        if (event.reason && event.reason.message && event.reason.message.includes("message channel closed")) {
+            event.preventDefault(); // Empêche l'affichage dans la console
+        }
     };
 
     UI.cacheDOM();
@@ -45,8 +55,17 @@ function init() {
     }, 100);
 
     // --- 3. ÉCOUTEURS D'ÉVÉNEMENTS ---
-    document.getElementById("click-btn")?.addEventListener("click", Formulas.handleManualClick);
-    document.getElementById("btn-buy-bee")?.addEventListener("click", Formulas.buyBee);
+    document.getElementById("click-btn")?.addEventListener("click", (e) => {
+        Formulas.handleManualClick(e);
+        UI.updateDisplay(); // Mise à jour immédiate au clic
+    });
+
+    document.getElementById("btn-buy-bee")?.addEventListener("click", () => {
+        Formulas.buyBee();
+        UI.updateDisplay();
+        Storage.queueSave();
+    });
+
     document.getElementById("hornet")?.addEventListener("click", GameLogic.handleHornetClick);
 
     // Gestion des modes et options UI
@@ -92,37 +111,67 @@ function init() {
         document.getElementById("stats-modal")?.classList.remove("hidden");
     });
 
-    document.getElementById("btn-buy-click")?.addEventListener("click", () => Formulas.performBulkPurchase(
-        'clickCost', 'clickLevel', 1.35, "🌸 Clic amélioré ! Puissance +1", 
-        (bought) => Formulas.addExp(10 * bought),
-        Constants.CLICK_MAX_LEVEL
-    ));
+    document.getElementById("btn-buy-click")?.addEventListener("click", () => {
+        Formulas.performBulkPurchase(
+            'clickCost', 'clickLevel', 1.35, "🌸 Clic amélioré ! Puissance +1", 
+            (bought) => Formulas.addExp(10 * bought),
+            Constants.CLICK_MAX_LEVEL
+        );
+        UI.updateDisplay();
+        Storage.queueSave();
+    });
 
     Object.keys(Constants.FLOWER_MILESTONES).forEach(flowerId => {
-        document.getElementById(`btn-buy-${flowerId}`)?.addEventListener("click", () => Formulas.performBulkPurchase(
-            `${flowerId}Cost`, `${flowerId}Lvl`, 1.3, `🪻 ${flowerId.charAt(0).toUpperCase() + flowerId.slice(1)} plantée !`,
-            (bought) => gameState.flowersPlanted += bought
-        ));
+        document.getElementById(`btn-buy-${flowerId}`)?.addEventListener("click", () => {
+            Formulas.performBulkPurchase(
+                `${flowerId}Cost`, `${flowerId}Lvl`, 1.3, `🪻 ${flowerId.charAt(0).toUpperCase() + flowerId.slice(1)} plantée !`,
+                (bought) => gameState.flowersPlanted += bought
+            );
+            UI.updateDisplay();
+            Storage.queueSave();
+        });
     });
 
     document.querySelectorAll('[id^="btn-buy-pot-"]').forEach(btn => {
-        btn.addEventListener("click", () => Formulas.buyPotion(btn.id.replace('btn-buy-pot-', '')));
+        btn.addEventListener("click", () => {
+            Formulas.buyPotion(btn.id.replace('btn-buy-pot-', ''));
+            UI.updateDisplay();
+            Storage.queueSave();
+        });
     });
     document.querySelectorAll('[id^="btn-use-pot-"]').forEach(btn => {
-        btn.addEventListener("click", () => Formulas.usePotion(btn.id.replace('btn-use-pot-', '')));
+        btn.addEventListener("click", () => {
+            Formulas.usePotion(btn.id.replace('btn-use-pot-', ''));
+            UI.updateDisplay();
+            Storage.queueSave();
+        });
     });
 
-    document.getElementById("btn-buy-honeycomb")?.addEventListener("click", () => Formulas.performBulkPurchase('honeycombCost', 'honeycombLvl', 1.35, "🧱 Rayons renforcés ! Prod +2%", () => Utils.playSound('buy')));
-    document.getElementById("btn-buy-dance")?.addEventListener("click", () => Formulas.performBulkPurchase('danceCost', 'danceLvl', 1.4, "💃 Danse ! Prod +2%"));
-    document.getElementById("btn-buy-gloves")?.addEventListener("click", () => Formulas.performBulkPurchase('glovesCost', 'glovesLvl', 1.45, "🧤 Gants ! Clic +5%"));
-    document.getElementById("btn-buy-nectar")?.addEventListener("click", () => Formulas.performBulkPurchase('nectarCost', 'nectarLvl', 1.35, "🧪 Nectar ! Chance +0.1"));
-    document.getElementById("btn-buy-filter")?.addEventListener("click", () => Formulas.performBulkPurchase('filterCost', 'filterLvl', 1.4, "🌪️ Filtre ! Prod +2%"));
-    document.getElementById("btn-buy-mead")?.addEventListener("click", () => Formulas.performBulkPurchase('meadCost', 'meadLvl', 1.4, "🍷 Hydromel ! Prod +3%"));
-    document.getElementById("btn-buy-stinger")?.addEventListener("click", () => Formulas.performBulkPurchase('stingerCost', 'stingerLvl', 1.45, "🗡️ Dard ! Clic +6%"));
-    document.getElementById("btn-buy-hivenet")?.addEventListener("click", () => Formulas.performBulkPurchase('hivenetCost', 'hivenetLvl', 1.5, "🌐 Réseau ! Prod +3%"));
-    document.getElementById("btn-buy-wax")?.addEventListener("click", () => Formulas.performBulkPurchase('waxCost', 'waxLvl', 1.5, "🕯️ Cire ! Prod +4%"));
-    document.getElementById("btn-buy-jelly")?.addEventListener("click", () => Formulas.performBulkPurchase('jellyCost', 'jellyLvl', 1.6, "🧪 Gelée ! Prod +5%"));
-    document.getElementById("btn-buy-prestige-boost")?.addEventListener("click", () => Formulas.performBulkPurchase('prestigeBoostCost', 'prestigeBoostLevel', 1.4, "🧬 Phéromones ! Global +5%"));
+    const simpleUpgrades = [
+        { id: "honeycomb", cost: "honeycombCost", lvl: "honeycombLvl", mult: 1.35, msg: "🧱 Rayons renforcés ! Prod +2%" },
+        { id: "dance", cost: "danceCost", lvl: "danceLvl", mult: 1.4, msg: "💃 Danse ! Prod +2%" },
+        { id: "gloves", cost: "glovesCost", lvl: "glovesLvl", mult: 1.45, msg: "🧤 Gants ! Clic +5%" },
+        { id: "nectar", cost: "nectarCost", lvl: "nectarLvl", mult: 1.35, msg: "🧪 Nectar ! Chance +0.1" },
+        { id: "filter", cost: "filterCost", lvl: "filterLvl", mult: 1.4, msg: "🌪️ Filtre ! Prod +2%" },
+        { id: "mead", cost: "meadCost", lvl: "meadLvl", mult: 1.4, msg: "🍷 Hydromel ! Prod +3%" },
+        { id: "stinger", cost: "stingerCost", lvl: "stingerLvl", mult: 1.45, msg: "🗡️ Dard ! Clic +6%" },
+        { id: "hivenet", cost: "hivenetCost", lvl: "hivenetLvl", mult: 1.5, msg: "🌐 Réseau ! Prod +3%" },
+        { id: "wax", cost: "waxCost", lvl: "waxLvl", mult: 1.5, msg: "🕯️ Cire ! Prod +4%" },
+        { id: "jelly", cost: "jellyCost", lvl: "jellyLvl", mult: 1.6, msg: "🧪 Gelée ! Prod +5%" }
+    ];
+
+    simpleUpgrades.forEach(upg => {
+        document.getElementById(`btn-buy-${upg.id}`)?.addEventListener("click", () => {
+            Formulas.performBulkPurchase(upg.cost, upg.lvl, upg.mult, upg.msg);
+            UI.updateDisplay();
+            Storage.queueSave();
+        });
+    });
+
+    document.getElementById("btn-buy-prestige-boost")?.addEventListener("click", () => {
+        Formulas.performBulkPurchase('prestigeBoostCost', 'prestigeBoostLevel', 1.4, "🧬 Phéromones ! Global +5%");
+        UI.updateDisplay(); Storage.queueSave();
+    });
     
     document.getElementById("btn-force-rain")?.addEventListener("click", () => {
         GameLogic.forceRain();
@@ -137,7 +186,8 @@ function init() {
             gameState.masteryPoints -= amountToBuy;
             gameState.masteryClickBonus += amountToBuy;
             Utils.showNotification(`⚡ Maîtrise Céleste : Clic de base +${amountToBuy} !`);
-            UI.updateDisplay(); Storage.queueSave();
+            UI.updateDisplay();
+            Storage.queueSave();
         } else { Utils.showNotification("Points de maîtrise insuffisants."); }
     });
 
@@ -152,7 +202,8 @@ function init() {
             gameState.masteryPoints -= amountToBuy;
             gameState.masteryLuckBonus += (amountToBuy * 0.1); // Réduit de 0.25 à 0.1
             Utils.showNotification(`✨ Maîtrise Céleste : Chance augmentée de +${(amountToBuy * 0.1).toFixed(1)} !`);
-            UI.updateDisplay(); Storage.queueSave();
+            UI.updateDisplay();
+            Storage.queueSave();
         } else { Utils.showNotification("Points de maîtrise insuffisants."); }
     });
 
