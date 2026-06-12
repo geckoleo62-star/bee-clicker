@@ -125,7 +125,9 @@ function init() {
     document.getElementById("btn-buy-prestige-boost")?.addEventListener("click", () => Formulas.performBulkPurchase('prestigeBoostCost', 'prestigeBoostLevel', 1.4, "🧬 Phéromones ! Global +5%"));
     
     document.getElementById("btn-force-rain")?.addEventListener("click", () => {
-        Formulas.forceRain();
+        GameLogic.forceRain();
+        UI.updateDisplay();
+        Storage.queueSave();
     });
 
 
@@ -174,7 +176,14 @@ function init() {
     UI.ui["tab-beedex"]?.addEventListener("click", () => UI.switchTab(UI.ui["tab-beedex"], UI.ui["beedex-view"]));
     UI.ui["tab-potions"]?.addEventListener("click", () => UI.switchTab(UI.ui["tab-potions"], UI.ui["potion-view"]));
 
-    document.getElementById("prestige-btn")?.addEventListener("click", Formulas.prestige);
+    document.getElementById("prestige-btn")?.addEventListener("click", () => {
+        if (Formulas.prestige()) {
+            GameLogic.startAutoclickLoop();
+            UI.renderMissions();
+            UI.updateDisplay();
+        }
+    });
+
     document.getElementById("reset-btn")?.addEventListener("click", Formulas.resetGame);
     document.getElementById('btn-export')?.addEventListener('click', Storage.exportSave);
     document.getElementById('btn-import')?.addEventListener("click", Storage.importSave);
