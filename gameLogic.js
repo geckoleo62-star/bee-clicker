@@ -120,7 +120,7 @@ export function startAutoclickLoop() {
         if (gameState.maxHoneyReached >= 100) autoGain += currentClickPower * 1; 
         if (gameState.maxHoneyReached >= 1000) autoGain += currentClickPower * 5;
         if (autoGain > 0) Formulas.addHoney(autoGain);
-        UI.updateDisplay();
+        // Doublon supprimé : UI.updateDisplay est déjà géré par la boucle principale de script.js
     }, delay);
 }
 
