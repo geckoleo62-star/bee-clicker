@@ -51,7 +51,7 @@ export function getTotalMissionTiersClaimed() {
 }
 
 export function getPrestigeMultiplier() {
-    return Math.pow(3, gameState.royalJelly);
+    return Math.pow(2.3, gameState.royalJelly); // Ajusté pour une courbe de progression plus longue (cible Ascension 25)
 }
 
 export function getBaseCps() {
@@ -80,10 +80,10 @@ export function getBaseCps() {
         
         // Application d'un amortissement sur la synergie pour éviter l'explosion en late-game
         let flowerSynergy = boostCommon * boostRare * boostLegendary * boostMythic * boostDivine * globalFlowerMult;
-        base = rawProd * Math.pow(flowerSynergy, 0.7);
+        base = rawProd * Math.pow(flowerSynergy, 0.45); // Réduit à 0.45 pour freiner l'explosion des bonus de fleurs croisés
         
         if (paradigm.id === "divine") {
-            base *= Math.pow(1.002, getTotalBees()); // Passé à 0.2% composé pour plus de punch
+            base *= Math.pow(1.001, getTotalBees()); // Réduit de 0.2% à 0.1% par abeille pour le multiplicateur composé
         }
     }
     
@@ -110,7 +110,7 @@ export function getBaseCps() {
     const beedexBonus = getBeedexBonus();
 
     let potionBonus = gameState.activePotions.honey > 0 ? 2 : 1;
-     let frenzyBonus = gameState.activePotions.frenzy > 0 ? Constants.FRENZY_PROD_MULTIPLIER : 1;
+    let frenzyBonus = gameState.activePotions.frenzy > 0 ? Constants.FRENZY_PROD_MULTIPLIER : 1;
 
     const levelMultiplier = 1 + (gameState.level - 1) * 0.01;
     const comboMultiplier = 1 + (Math.min(gameState.comboCount || 0, 25) * 0.01);
@@ -170,7 +170,7 @@ export function getRarityThresholds() {
 
 export function getPrestigeCost() {
     let baseCost = 50000; 
-    return baseCost * Math.pow(12.5, gameState.royalJelly);
+    return baseCost * Math.pow(14, gameState.royalJelly); // Équilibré pour que l'écart entre production et coût reste un défi constant
 }
 
 export function getEarnedMasteryPoints() {
@@ -516,7 +516,7 @@ export function prestige() {
             gameState.jellyLvl = 0;
             gameState.prestigeBoostLevel = 0;
 
-            let inflation = Math.pow(2.0, gameState.royalJelly);
+            let inflation = Math.pow(2.4, gameState.royalJelly); // Inflation des prix de base plus cohérente avec le bonus de prestige
             gameState.beeCost = 50 * inflation;
             gameState.clickCost = 150 * inflation;
             
