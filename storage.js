@@ -77,7 +77,7 @@ export function loadGame() {
                 }
             }
             UI.renderArtifacts();
-            startAutoclickLoop(); // Redémarre l'autoclick après le chargement
+            startAutoclickLoop(Formulas); // Redémarre l'autoclick après le chargement
         } catch (e) {
             console.error("Échec du chargement de la sauvegarde :", e);
         }

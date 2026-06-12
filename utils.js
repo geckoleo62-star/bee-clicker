@@ -5,7 +5,6 @@
  */
 
 import { gameState } from './state.js';
-import * as UI from './ui.js';
 
 let audioCtx = null;
 
@@ -39,7 +38,7 @@ export function formatTime(seconds) {
 }
 
 export function addLog(message, type = "") {
-    const container = UI.ui["log-container"];
+    const container = document.getElementById("log-container");
     if (!container) return;
 
     const now = new Date();
@@ -64,7 +63,7 @@ export function addLog(message, type = "") {
 }
 
 export function showNotification(message, type = "") {
-    const container = UI.ui["notification-container"];
+    const container = document.getElementById("notification-container");
     const toast = document.createElement("div");
     toast.className = `toast-notification ${type}`;
     toast.innerHTML = message;

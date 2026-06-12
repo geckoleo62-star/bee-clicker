@@ -57,6 +57,9 @@ export let gameState = {
     totalPlayTime: 0,
     totalArtifactsHistorical: 0,
     totalPotionsCraftedHistorical: 0,
+    totalPotionsUsedHistorical: 0,
+    totalGoldenBeesHistorical: 0,
+    totalIngredientsCollectedHistorical: 0,
     missionsClaimed: {},
     weather: "Soleil",
     artifacts: [],
@@ -96,6 +99,8 @@ export const internalVars = {
     rainTimeout: null, // Timer pour la prochaine pluie
     saveTimeout: null,
     isInitialRender: true,
+    lastManualClickTime: 0,
+    lastClickDelta: 0,
 };
 
 export function updateState(newData) {

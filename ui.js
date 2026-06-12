@@ -65,6 +65,71 @@ export function cacheDOM() {
     ui["buyAmountButtons"] = document.querySelectorAll(".buy-amount-btn");
 }
 
+/**
+ * Met à jour les descriptions du magasin avec les taux réels des constantes.
+ */
+export function refreshShopDescriptions() {
+    const upgrades = [
+        { id: 'honeycomb', type: 'Production', rateKey: 'honeycomb' },
+        { id: 'dance', type: 'Production', rateKey: 'dance' },
+        { id: 'filter', type: 'Production', rateKey: 'filter' },
+        { id: 'mead', type: 'Production', rateKey: 'mead' },
+        { id: 'hivenet', type: 'Production', rateKey: 'hivenet' },
+        { id: 'wax', type: 'Production', rateKey: 'wax' },
+        { id: 'jelly', type: 'Production', rateKey: 'jelly' },
+        { id: 'prestige-boost', type: 'Global', rateKey: 'prestigeBoost', customId: 'celestial-upgrade-item' },
+        { id: 'gloves', type: 'Clic', rateKey: 'gloves' },
+        { id: 'stinger', type: 'Clic', rateKey: 'stinger' }
+    ];
+
+    upgrades.forEach(u => {
+        const rate = Constants.UPGRADE_RATES[u.rateKey];
+        const el = ui[u.customId || `item-${u.id}`];
+        if (el) {
+            const descEl = el.querySelector('small');
+            if (descEl && descEl.childNodes.length > 0) {
+                // On modifie seulement le premier nœud de texte pour préserver les spans (lvl/cost)
+                descEl.childNodes[0].textContent = `${u.type} +${Math.round(rate * 100)}% | Nv `;
+            }
+        }
+    });
+
+    // Mise à jour des descriptions des fleurs
+    const flowerTypes = [
+        { id: 'lavender', type: 'Communes', rateKey: 'FLOWER_BONUS_PRIMARY' },
+        { id: 'sunflower', type: 'Rares', rateKey: 'FLOWER_BONUS_PRIMARY' },
+        { id: 'rose', type: 'Légend.', rateKey: 'FLOWER_BONUS_PRIMARY' },
+        { id: 'daisy', type: 'Mythiques', rateKey: 'FLOWER_BONUS_PRIMARY' },
+        { id: 'orchid', type: 'Divines', rateKey: 'FLOWER_BONUS_PRIMARY' },
+        { id: 'lily', type: 'Communes', rateKey: 'FLOWER_BONUS_SECONDARY' },
+        { id: 'tulip', type: 'Rares', rateKey: 'FLOWER_BONUS_SECONDARY' },
+        { id: 'poppy', type: 'Légend.', rateKey: 'FLOWER_BONUS_SECONDARY' },
+        { id: 'lotus', type: 'Mythiques', rateKey: 'FLOWER_BONUS_SECONDARY' },
+        { id: 'hibiscus', type: 'Divines', rateKey: 'FLOWER_BONUS_SECONDARY' }
+    ];
+
+    flowerTypes.forEach(f => {
+        const rate = Constants[f.rateKey];
+        const el = ui[`flower-${f.id}`];
+        if (el) {
+            const descEl = el.querySelector('small');
+            if (descEl && descEl.childNodes.length > 0) {
+                // On modifie seulement le premier nœud de texte pour préserver les spans (lvl/cost)
+                descEl.childNodes[0].textContent = `${f.type} +${Math.round(rate * 100)}% | Nv `;
+            }
+        }
+    });
+}
+
+export function animateLevelUp() {
+    const playerLevelEl = ui["player-level"];
+    if (playerLevelEl) {
+        playerLevelEl.classList.remove("level-up-animation"); // Réinitialise l'animation si elle est déjà active
+        void playerLevelEl.offsetWidth; // Force le reflow pour redéclencher l'animation
+        playerLevelEl.classList.add("level-up-animation");
+    }
+}
+
 export const updateText = (id, val) => {
     const el = (typeof id === 'string') ? (ui[id] || document.getElementById(id)) : id;
     if (!el) return;
@@ -93,6 +158,10 @@ export const toggleClass = (idOrEl, className, condition) => {
 };
 
 export function updateDisplay() {
+    if (internalVars.isInitialRender) {
+        refreshShopDescriptions(); // Met à jour les descriptions du magasin et du jardin
+    }
+
     const multiplier = Formulas.getPrestigeMultiplier();
     const totalCps = Formulas.getBaseCps() * multiplier;
     const currentPrestigeCost = Formulas.getPrestigeCost();
@@ -279,6 +348,7 @@ export function updateDisplay() {
 
     const upgradeConfigs = [
         ['honeycomb', 'honeycombCost', 'honeycombLvl', 1.35], ['nectar', 'nectarCost', 'nectarLvl', 1.35], ['dance', 'danceCost', 'danceLvl', 1.4], ['gloves', 'glovesCost', 'glovesLvl', 1.45], ['filter', 'filterCost', 'filterLvl', 1.4], ['mead', 'meadCost', 'meadLvl', 1.4], ['stinger', 'stingerCost', 'stingerLvl', 1.45], ['hivenet', 'hivenetCost', 'hivenetLvl', 1.5], ['wax', 'waxCost', 'waxLvl', 1.5], ['jelly', 'jellyCost', 'jellyLvl', 1.6],
+        ['prestige-boost', 'prestigeBoostCost', 'prestigeBoostLevel', 1.4],
         ['lavender', 'lavenderCost', 'lavenderLvl', 1.3], ['sunflower', 'sunflowerCost', 'sunflowerLvl', 1.3], ['rose', 'roseCost', 'roseLvl', 1.3],
         ['daisy', 'daisyCost', 'daisyLvl', 1.3], ['orchid', 'orchidCost', 'orchidLvl', 1.3], ['lily', 'lilyCost', 'lilyLvl', 1.3], ['tulip', 'tulipCost', 'tulipLvl', 1.3],
         ['poppy', 'poppyCost', 'poppyLvl', 1.3], ['lotus', 'lotusCost', 'lotusLvl', 1.3], ['hibiscus', 'hibiscusCost', 'hibiscusLvl', 1.3]
@@ -296,14 +366,8 @@ export function updateDisplay() {
         if (btn) toggleClass(item.id, 'affordable', !btn.disabled);
     });
 
-    let celestialSection = ui["celestial-upgrade-item"];
     const isCelestialUnlocked = gameState.royalJelly >= 2;
     toggleClass("celestial-upgrade-item", "hidden", !isCelestialUnlocked);
-    if (isCelestialUnlocked) {
-        setTxt("lvl-prestige-boost", gameState.prestigeBoostLevel); // Utilise setTxt
-        setTxt("cost-prestige-boost", Utils.formatNumber(gameState.prestigeBoostCost)); // Utilise setTxt
-        setBtn("btn-buy-prestige-boost", gameState.honey < gameState.prestigeBoostCost); // Utilise setBtn
-    }
 
     setTxt("count-common", `${Utils.formatNumber(gameState.beesCommon)} (${Constants.PROD_COMMON}/s)`);
     setTxt("count-rare", `${Utils.formatNumber(gameState.beesRare)} (${Constants.PROD_RARE}/s)`);
@@ -416,12 +480,25 @@ export function renderMissions() {
     missionCache.clear();
     let completed = 0;
 
-    // On vide la liste pour s'assurer que les nouveaux IDs et écouteurs sont corrects
     list.innerHTML = "";
     const fragment = document.createDocumentFragment();
 
-    GameLogic.MISSIONS.forEach((mission, idx) => {
-        const progress = GameLogic.getMissionProgress(mission);
+    // Définir les IDs des missions permanentes (celles qui sont conservées au prestige)
+    const permanentMissionIds = ["botanist", "click_pro", "golden_seeker", "ingredient_gatherer", "alchemist"];
+
+    const seasonalMissions = [];
+    const permanentMissions = [];
+
+    GameLogic.MISSIONS.forEach(mission => {
+        if (permanentMissionIds.includes(mission.id)) {
+            permanentMissions.push(mission);
+        } else {
+            seasonalMissions.push(mission);
+        }
+    });
+
+    const renderMissionCard = (mission) => {
+        const progress = GameLogic.getMissionProgress(mission, Formulas);
         const currentTierIdx = gameState.missionsClaimed[mission.id] || 0;
         const isMaxed = currentTierIdx >= mission.tiers.length;
         
@@ -433,11 +510,16 @@ export function renderMissions() {
         const progressText = `${Utils.formatNumber(Math.min(Math.floor(progress), currentTier.target))}/${Utils.formatNumber(currentTier.target)}`;
         
         const card = document.createElement("div");
-        card.className = "mission-card" + (isMaxed ? " claimed" : ready ? " ready" : "");
+        let cardClass = "mission-card";
+        if (isMaxed) cardClass += " claimed";
+        else if (ready) cardClass += " ready";
+        const isPermanent = permanentMissionIds.includes(mission.id);
+        if (isPermanent) cardClass += " permanent";
+        card.className = cardClass;
         card.innerHTML = `
             <div class="mission-top">
                 <div class="mission-info">
-                    <strong>${mission.title}</strong>
+                    <strong>${isPermanent ? '📌' : '⏳'} ${mission.title}</strong>
                     <small>${(isMaxed ? "Complété" : `Palier ${currentTierIdx + 1}`) + " • " + progressText + " • " + currentTier.rewardText}</small>
                 </div>
                 <button ${isMaxed || !ready ? 'disabled' : ''}>${isMaxed ? "Terminé" : ready ? "Réclamer" : "En cours"}</button>
@@ -453,34 +535,81 @@ export function renderMissions() {
             fill: card.querySelector(".mission-progress span")
         });
 
-        card.querySelector("button").addEventListener("click", () => GameLogic.claimMission(mission.id));
-        fragment.appendChild(card);
+        card.querySelector("button").addEventListener("click", () => {
+            const result = GameLogic.claimMission(mission.id, Formulas);
+            if (result.success) {
+                Utils.playSound('collect');
+                Utils.showNotification(`🎯 Palier atteint : ${result.rewardText}`);
+                result.notificationMessages.forEach(msg => Utils.showNotification(msg));
+                if (result.expResult.levelUp) {
+                    Utils.showNotification(`🎉 NIVEAU SUPÉRIEUR ! Vous êtes niveau ${gameState.level}`);
+                    Utils.playSound('levelup');
+                    animateLevelUp();
+                }
+                if (result.expResult.masteryPoint) {
+                    Utils.showNotification("🎁 Récompense de palier : +1 Point de Maîtrise !", "divine");
+                }
+                renderMissions();
+                updateDisplay();
+                Storage.flushSave();
+            } else {
+                Utils.showNotification(result.message, "warning");
+            }
+        });
+        return card;
+    };
+
+    // Rendre les titres et les missions saisonnières en premier
+    const sTitle = document.createElement("div");
+    sTitle.className = "mission-section-title";
+    sTitle.innerText = "Missions de l'Ascension (Reset)";
+    fragment.appendChild(sTitle);
+
+    seasonalMissions.forEach(mission => {
+        fragment.appendChild(renderMissionCard(mission));
     });
+
+    // Rendre les missions permanentes ensuite
+    if (permanentMissions.length > 0) {
+        const pTitle = document.createElement("div");
+        pTitle.className = "mission-section-title permanent-title";
+        pTitle.innerText = "Objectifs Permanents (Carrière)";
+        fragment.appendChild(pTitle);
+
+        permanentMissions.forEach(mission => {
+            fragment.appendChild(renderMissionCard(mission));
+        });
+    }
 
     list.appendChild(fragment);
     completedDisplay.textContent = completed;
     totalDisplay.textContent = GameLogic.MISSIONS.length.toString();
 }
 
-/**
+/** 
  * Met à jour uniquement les textes et barres de progression des missions
  * sans vider le innerHTML pour optimiser les performances (appelé 10x/sec).
  */
 export function updateMissionsProgress() {
     const list = ui["missions-list"];
-    if (!list || list.children.length !== GameLogic.MISSIONS.length) return;
+    // On vérifie seulement si la liste existe et si le cache est prêt
+    if (!list || missionCache.size === 0) return;
+
+    const permanentMissionIds = ["botanist", "click_pro", "golden_seeker", "ingredient_gatherer", "alchemist"];
 
     GameLogic.MISSIONS.forEach((mission) => {
         const cached = missionCache.get(mission.id);
         if (!cached) return;
 
-        const progress = GameLogic.getMissionProgress(mission);
+        const progress = GameLogic.getMissionProgress(mission, Formulas);
         const currentTierIdx = gameState.missionsClaimed[mission.id] || 0;
         const isMaxed = currentTierIdx >= mission.tiers.length;
         const currentTier = isMaxed ? mission.tiers[mission.tiers.length - 1] : mission.tiers[currentTierIdx];
         const ready = !isMaxed && progress >= currentTier.target;
 
-        const expectedClass = "mission-card" + (isMaxed ? " claimed" : ready ? " ready" : "");
+        let expectedClass = "mission-card" + (isMaxed ? " claimed" : ready ? " ready" : "");
+        if (permanentMissionIds.includes(mission.id)) expectedClass += " permanent";
+        
         if (cached.card.className !== expectedClass) cached.card.className = expectedClass;
 
         const progressText = `${Utils.formatNumber(Math.min(Math.floor(progress), currentTier.target))}/${Utils.formatNumber(currentTier.target)}`;

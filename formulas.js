@@ -68,7 +68,7 @@ export function getFlowerTierBonus(lvl1, lvl2) {
 }
 
 export function getPrestigeMultiplier() {
-    return Math.pow(2.1, gameState.royalJelly); // Réduit légèrement pour freiner l'inflation de puissance brute
+    return Math.pow(2.5, gameState.royalJelly); // Ajuste cette valeur (ex: 2.2) pour augmenter ou réduire la puissance gagnée
 }
 
 export function getBaseCps() {
@@ -97,7 +97,7 @@ export function getBaseCps() {
         
         // Application d'un amortissement sur la synergie pour éviter l'explosion en late-game
         let flowerSynergy = boostCommon * boostRare * boostLegendary * boostMythic * boostDivine * globalFlowerMult;
-        base = rawProd * Math.pow(flowerSynergy, 0.38); // Réduit de 0.45 à 0.38 pour mieux contrôler les synergies croisées
+        base = rawProd * Math.pow(flowerSynergy, 0.35); // Réduit à 0.35 pour un contrôle encore plus fin des synergies
         
         if (paradigm.id === "divine") {
             base *= Math.pow(1.001, getTotalBees()); // Réduit de 0.2% à 0.1% par abeille pour le multiplicateur composé
@@ -180,7 +180,7 @@ export function getRarityThresholds() {
 
 export function getPrestigeCost() {
     let baseCost = 50000; 
-    return baseCost * Math.pow(14, gameState.royalJelly); // Équilibré pour que l'écart entre production et coût reste un défi constant
+    return baseCost * Math.pow(15, gameState.royalJelly); // Ajusté de 22 à 15 pour une progression plus équilibrée en fin de jeu
 }
 
 export function getEarnedMasteryPoints() {
@@ -200,6 +200,7 @@ export function getEarnedMasteryPoints() {
 }
 
 export function addHoney(amount) {
+    if (isNaN(amount) || amount <= 0) return;
     gameState.honey = Math.max(0, gameState.honey + amount);
     gameState.totalHoneyProduced += amount;
     if (gameState.honey > gameState.maxHoneyReached) {
@@ -210,36 +211,24 @@ export function addHoney(amount) {
     }
 }
 
-export function addExp(amount) {
-    if (isNaN(amount) || amount <= 0) return;
+export function addExp(amount) { // Cette fonction sera modifiée pour retourner des événements
+    if (isNaN(amount) || amount <= 0) return { levelUp: false, masteryPoint: false };
     gameState.exp += amount;
-    
-    let levelsGained = 0;
-    while (gameState.exp >= gameState.expNextLevel && levelsGained < 100) {
-        if (gameState.expNextLevel < 1) gameState.expNextLevel = 1;
+    let levelUp = false;
+    let masteryPoint = false;
 
+    while (gameState.exp >= gameState.expNextLevel) {
+        levelUp = true;
         gameState.exp -= gameState.expNextLevel;
         gameState.level++;
         gameState.expNextLevel = Math.max(1, Math.floor(100 * Math.pow(1.3, gameState.level - 1)));
-        Utils.showNotification(`🎉 NIVEAU SUPÉRIEUR ! Vous êtes niveau ${gameState.level}`);
-        Utils.playSound('levelup'); // Joue le son de passage de niveau
-
-        // Déclenche l'animation visuelle sur le numéro de niveau
-        const playerLevelEl = document.getElementById("player-level");
-        if (playerLevelEl) {
-            playerLevelEl.classList.remove("level-up-animation"); // Réinitialise l'animation si elle est déjà active
-            void playerLevelEl.offsetWidth; // Force le reflow pour redéclencher l'animation
-            playerLevelEl.classList.add("level-up-animation");
-        }
-        
-        addHoney(gameState.level * 100 * getPrestigeMultiplier());
-
+        addHoney(gameState.level * 100 * getPrestigeMultiplier()); // Le bonus de miel reste ici
         if (gameState.level % 10 === 0) {
             gameState.masteryPoints++;
-            Utils.showNotification("🎁 Récompense de palier : +1 Point de Maîtrise !", "divine");
+            masteryPoint = true;
         }
-        levelsGained++;
     }
+    return { levelUp, masteryPoint };
 }
 
 export function getBulkCost(costKey, lvlKey, multiplier, maxLvl = Infinity) {
@@ -288,18 +277,16 @@ export function performBulkPurchase(costKey, lvlKey, multiplier, notificationMsg
     const { totalCost, newCost, levelsBought } = calculateBulkPurchase(currentCost, currentLvl, buyAmount, multiplier, maxLvl);
 
     if (levelsBought === 0) {
-        Utils.showNotification("Niveau maximum atteint ou impossible d'acheter.");
-        return;
+        return { success: false, message: "Niveau maximum atteint ou impossible d'acheter." };
     }
 
     if (gameState.honey >= totalCost) {
         gameState.honey -= totalCost;
         gameState[lvlKey] += levelsBought;
         gameState[costKey] = newCost;
-        if (specificUpdates) specificUpdates(levelsBought);
-        Utils.showNotification(`${notificationMsg} (${levelsBought} fois)`);
+        return { success: true, levelsBought, notificationMsg, specificUpdates }; // specificUpdates est maintenant retourné
     } else {
-        Utils.showNotification("Miel insuffisant pour cet achat.");
+        return { success: false, message: "Miel insuffisant pour cet achat." };
     }
 }
 
@@ -311,56 +298,53 @@ export function buyPotion(type) {
     if (gameState.ingredients.water >= recipe.water && 
         gameState.ingredients.petals >= recipe.petals && 
         gameState.ingredients.nectar >= recipe.nectar &&
-        gameState.honey >= honeyCost) {
-        
+        gameState.honey >= honeyCost) {        
         gameState.honey -= honeyCost;
         gameState.ingredients.water -= recipe.water;
         gameState.ingredients.petals -= recipe.petals;
         gameState.ingredients.nectar -= recipe.nectar;
-        Utils.playSound('buy');
         gameState.totalPotionsCraftedHistorical++;
 
         gameState.potions[type]++;
-        Utils.showNotification(`🧪 Potion de ${type} fabriquée !`);
+        return { success: true, type, honeyCost, recipe };
     } else {
-        Utils.showNotification(`Manque de ressources ! Requis: 💧${recipe.water}, 🌸${recipe.petals}, 🧪${recipe.nectar} et ${Utils.formatNumber(honeyCost)} 🍯`);
+        return { success: false, type, honeyCost, recipe, message: "Manque de ressources !" };
     }
 }
 
 export function usePotion(type) {
     if (gameState.potions[type] > 0) {
         if (gameState.activePotions[type] > 0) {
-            Utils.showNotification("Une potion de ce type est déjà active !");
-            return;
+            return { success: false, message: "Une potion de ce type est déjà active !" };
         }
         gameState.potions[type]--;
         gameState.totalPotionsUsed = (gameState.totalPotionsUsed || 0) + 1;
+        gameState.totalPotionsUsedHistorical = (gameState.totalPotionsUsedHistorical || 0) + 1;
         gameState.activePotions[type] = type === 'click' ? 30 : 60;
-        Utils.showNotification(`✨ Potion activée !`);
+        return { success: true, type };
     }
+    return { success: false, message: "Vous n'avez pas cette potion." };
 }
 
 export function handleManualClick(e) {
-    const btn = document.getElementById("click-btn");
-    if (btn) {
-        btn.classList.add("active-click");
-        setTimeout(() => btn.classList.remove("active-click"), 100);
-    }
-
-    gameState.totalClicks++;
-    gameState.totalClicksHistorical++;
+    const now = Date.now();
+    const delta = now - internalVars.lastManualClickTime;
     
-    const power = getClickPower();
-    const particle = document.createElement("div");
-    particle.className = "click-particle";
-    particle.innerText = "+" + Utils.formatNumber(power);
-    particle.style.left = e.clientX + "px";
-    particle.style.top = e.clientY + "px";
-    document.body.appendChild(particle);
-    
-    setTimeout(() => particle.remove(), 800);
+    // Détection de régularité parfaite (Caractéristique d'un bot)
+    // Un humain a toujours une variation de quelques millisecondes.
+    const isTooRegular = Math.abs(delta - internalVars.lastClickDelta) < 2;
 
-    if (e.isTrusted) {
+    // CRITIQUE : On met à jour le temps à CHAQUE tentative, même refusée.
+    // Cela paralyse les bots ultra-rapides.
+    internalVars.lastManualClickTime = now;
+    internalVars.lastClickDelta = delta;
+    
+    // Un humain dépasse rarement 15 clics/sec de façon régulière (66ms).
+    const isHumanlyPossible = delta > 66;
+
+    if (e.isTrusted && isHumanlyPossible && !isTooRegular) {
+        gameState.totalClicks++;
+        gameState.totalClicksHistorical++;
         gameState.comboCount++;
         if (internalVars.comboTimeout) clearTimeout(internalVars.comboTimeout);
         
@@ -370,7 +354,8 @@ export function handleManualClick(e) {
     }
 
     addHoney(getClickPower());
-    addExp(1 * (1 + (gameState.royalJelly * 0.1))); // L'ascension boost l'XP gagnée au clic
+    const expResult = addExp(1 * (1 + (gameState.royalJelly * 0.1))); // L'ascension boost l'XP gagnée au clic
+    return { clickPower: getClickPower(), comboCount: gameState.comboCount, expResult };
 }
 
 export function buyBee() {
@@ -392,10 +377,6 @@ export function buyBee() {
         let rarityThresholds = getRarityThresholds();
         gameState.pityCounter++;
 
-        if (gameState.pityCounter === 50) {
-            Utils.showNotification("🍀 Le compteur de pitié est actif ! Vos chances d'obtenir une abeille rare sont doublées !", "luck");
-        }
-
         if (gameState.pityCounter >= 50) {
             roll /= 2;
         }
@@ -404,14 +385,12 @@ export function buyBee() {
             gameState.discoveredBees.divine = true;
             counts.divine++;
             gameState.pityCounter = 0;
-            Utils.showNotification("✨ INCROYABLE : Une Abeille Divine !", "divine");
         }
         else if (roll < rarityThresholds.mythic) {
             gameState.beesMythic++; 
             gameState.discoveredBees.mythic = true;
             counts.mythic++;
             gameState.pityCounter = Math.max(0, gameState.pityCounter - 25); // Une mythique réduit la pitié sans la supprimer
-            if (limit < 10) Utils.showNotification("🚩 Rare : Une Abeille Mythique !", "mythic");
         }
         else if (roll < rarityThresholds.legendary) { 
             gameState.beesLegendary++; 
@@ -434,29 +413,33 @@ export function buyBee() {
     }
 
     if (beesBought > 0) {
-        // Point n°15 : Confirmation pour les achats d'abeilles en mode MAX
-        if (buyAmount === -1) {
-            const confirmMsg = `Voulez-vous acheter ${beesBought} abeille(s) pour ${Utils.formatNumber(totalCost)} 🍯 en mode MAX ?`;
-            if (!confirm(confirmMsg)) {
-                Utils.showNotification("Achat MAX annulé.", "info");
-                return;
-            }
-        }
-        gameState.honey -= totalCost;
-        gameState.beeCost = tempBeeCost;
-        addExp(15 * beesBought);
-        Utils.playSound('buy');
-        
         const summary = Object.entries(counts)
             .filter(([_, count]) => count > 0)
             .reverse() // Pour afficher Divine en premier
             .map(([rarity, count]) => `${Constants.BEE_INFO[rarity].name} x${count}`)
             .join(', ');
 
-        Utils.showNotification(`Acheté ${beesBought} abeille(s) : ${summary}`);
+        // Point n°15 : Confirmation pour les achats d'abeilles en mode MAX
+        if (buyAmount === -1) {
+            const confirmMsg = `Voulez-vous acheter ${beesBought} abeille(s) pour ${Utils.formatNumber(totalCost)} 🍯 en mode MAX ?`;
+            // La confirmation sera gérée par script.js
+            return { success: true, beesBought, totalCost, tempBeeCost, counts, confirmMsg, summary, needsConfirmation: true };
+        }
+        gameState.honey -= totalCost;
+        gameState.beeCost = tempBeeCost;
+        const expResult = addExp(15 * beesBought);
+        
+        return { success: true, beesBought, totalCost, tempBeeCost, counts, summary, needsConfirmation: false, expResult };
     } else {
-        Utils.showNotification("Miel insuffisant pour acheter des abeilles.");
+        return { success: false, message: "Miel insuffisant pour acheter des abeilles." };
     }
+}
+
+export function confirmBuyBee(beesBought, totalCost, tempBeeCost, counts, summary) {
+    gameState.honey -= totalCost;
+    gameState.beeCost = tempBeeCost;
+    const expResult = addExp(15 * beesBought);
+    return { success: true, beesBought, totalCost, tempBeeCost, counts, summary, expResult };
 }
 
 export function prestige() {
@@ -467,9 +450,6 @@ export function prestige() {
             let earnedPoints = getEarnedMasteryPoints();
             gameState.masteryPoints += earnedPoints;
             gameState.totalMasteryEarned += earnedPoints;
-
-            Utils.showNotification(`✨ Ascension ! Vous avez gagné ${earnedPoints} point(s) de Maîtrise !`);
-            Utils.addLog(`🚀 <b>Ascension ${gameState.royalJelly + 1}</b> réussie ! Gain : +${earnedPoints} ✨`, "divine");
 
             gameState.royalJelly += 1;
             gameState.honey = 100;
@@ -491,8 +471,18 @@ export function prestige() {
             gameState.maxHoneyReached = gameState.honey;
             
             const currentBotanistTier = gameState.missionsClaimed["botanist"];
-            gameState.missionsClaimed = {};
+            const currentClickProTier = gameState.missionsClaimed["click_pro"];
+            const currentGoldenSeekerTier = gameState.missionsClaimed["golden_seeker"];
+            const currentGathererTier = gameState.missionsClaimed["ingredient_gatherer"];
+            const currentAlchemistTier = gameState.missionsClaimed["alchemist"];
+            
+            gameState.missionsClaimed = {}; // On vide tout pour réinitialiser les missions "saisonnières"
+
             if (currentBotanistTier) gameState.missionsClaimed["botanist"] = currentBotanistTier;
+            if (currentClickProTier) gameState.missionsClaimed["click_pro"] = currentClickProTier;
+            if (currentGoldenSeekerTier) gameState.missionsClaimed["golden_seeker"] = currentGoldenSeekerTier;
+            if (currentGathererTier) gameState.missionsClaimed["ingredient_gatherer"] = currentGathererTier;
+            if (currentAlchemistTier) gameState.missionsClaimed["alchemist"] = currentAlchemistTier;
             
             gameState.totalPotionsUsed = 0;
             
@@ -508,7 +498,7 @@ export function prestige() {
             gameState.jellyLvl = 0;
             gameState.prestigeBoostLevel = 0;
 
-            let inflation = Math.pow(2.8, gameState.royalJelly); // Inflation augmentée à 2.8 pour rendre le début de chaque ascension plus tactique
+            let inflation = Math.pow(3.0, gameState.royalJelly); // Augmenté à 3.0 pour un début d'ascension plus exigeant
             gameState.beeCost = 50 * inflation;
             gameState.clickCost = 150 * inflation;
             
@@ -524,10 +514,10 @@ export function prestige() {
             gameState.jellyCost = 1500000 * inflation;
             gameState.prestigeBoostCost = 1500 * inflation;
 
-            return true; // Indique au script.js que l'ascension a eu lieu
+            return { success: true, earnedPoints, newRoyalJelly: gameState.royalJelly };
         }
     }
-    return false;
+    return { success: false, message: "Miel insuffisant pour l'Ascension." };
 }
 
 export function resetGame() {
@@ -546,8 +536,8 @@ export function resetGame() {
         }
         location.reload();
     } else {
-        Utils.showNotification("Mot de confirmation incorrect. Action annulée.", "warning");
-    }
+        return { success: false, message: "Mot de confirmation incorrect. Action annulée." };    }
+    return { success: true };
 }
 
 export function getForceRainCost() {
@@ -559,30 +549,25 @@ export function getForceRainCost() {
 /**
  * Gère l'activation des codes mécènes.
  */
-export function redeemCode() {
-    console.log("Tentative d'activation de code...");
-    const code = prompt("Entrez votre code mécène (ex: BEE-FREE, DIVINE-BEE, etc.) :");
-    if (!code) return;
+export function redeemCode(inputCode) {
+    if (!inputCode) return { success: false, message: "Aucun code entré." };
 
-    const upperCode = code.toUpperCase().trim();
+    const upperCode = inputCode.toUpperCase().trim();
 
     // Vérifie si le code a déjà été utilisé
     if (gameState.activatedCodes && gameState.activatedCodes.includes(upperCode)) {
-        Utils.showNotification("Ce code a déjà été utilisé.", "warning");
-        return;
+        return { success: false, message: "Ce code a déjà été utilisé." };
     }
 
     const codeData = Constants.DONATOR_CODES[upperCode];
 
     if (!codeData) {
-        Utils.showNotification("Code invalide.", "warning");
-        return;
+        return { success: false, message: "Code invalide." };
     }
 
     gameState.donatorTier = Math.max(gameState.donatorTier || 0, codeData.tier);
     if (!gameState.activatedCodes) gameState.activatedCodes = [];
     gameState.activatedCodes.push(upperCode);
 
-    Utils.showNotification(codeData.message, "success");
-    Utils.addLog(`🎁 Code utilisé : <b>${upperCode}</b>`, "success");
+    return { success: true, message: codeData.message, code: upperCode };
 }
