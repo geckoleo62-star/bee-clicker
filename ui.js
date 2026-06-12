@@ -122,15 +122,15 @@ export function updateDisplay() {
     setTxt("mastery-luck-total", gameState.masteryLuckBonus.toFixed(1));
 
     // Mise à jour du coût des abeilles (Bulk)
-    const totalBeeCost = Formulas.getBulkCost('beeCost', 'totalBeesBought', 1.15);
+    const totalBeeCost = Formulas.getBulkCost('beeCost', 'totalBeesBought', Constants.BEE_COST_MULTIPLIER);
     setTxt("cost-bees", Utils.formatNumber(totalBeeCost) + suffix);
     setBtn("btn-buy-bee", gameState.honey < totalBeeCost);
 
-    const commonBonus = (gameState.lavenderLvl * Constants.FLOWER_BONUS_PRIMARY * 100) + (gameState.lilyLvl * Constants.FLOWER_BONUS_SECONDARY * 100);
-    const rareBonus = (gameState.sunflowerLvl * Constants.FLOWER_BONUS_PRIMARY * 100) + (gameState.tulipLvl * Constants.FLOWER_BONUS_SECONDARY * 100);
-    const legendaryBonus = (gameState.roseLvl * Constants.FLOWER_BONUS_PRIMARY * 100) + (gameState.poppyLvl * Constants.FLOWER_BONUS_SECONDARY * 100);
-    const mythicBonus = (gameState.daisyLvl * Constants.FLOWER_BONUS_PRIMARY * 100) + (gameState.lotusLvl * Constants.FLOWER_BONUS_SECONDARY * 100);
-    const divineBonus = (gameState.orchidLvl * Constants.FLOWER_BONUS_PRIMARY * 100) + (gameState.hibiscusLvl * Constants.FLOWER_BONUS_SECONDARY * 100);
+    const commonBonus = Math.round((Formulas.getFlowerTierBonus(gameState.lavenderLvl, gameState.lilyLvl) - 1) * 100);
+    const rareBonus = Math.round((Formulas.getFlowerTierBonus(gameState.sunflowerLvl, gameState.tulipLvl) - 1) * 100);
+    const legendaryBonus = Math.round((Formulas.getFlowerTierBonus(gameState.roseLvl, gameState.poppyLvl) - 1) * 100);
+    const mythicBonus = Math.round((Formulas.getFlowerTierBonus(gameState.daisyLvl, gameState.lotusLvl) - 1) * 100);
+    const divineBonus = Math.round((Formulas.getFlowerTierBonus(gameState.orchidLvl, gameState.hibiscusLvl) - 1) * 100);
 
     setTxt("garden-common-bonus", commonBonus);
     setTxt("garden-rare-bonus", rareBonus);
@@ -138,18 +138,14 @@ export function updateDisplay() {
     setTxt("garden-mythic-bonus", mythicBonus);
     setTxt("garden-divine-bonus", divineBonus);
 
-    const artCounts = Formulas.getArtifactCounts();
-    const prodMult = (1 + (gameState.honeycombLvl * 0.02)) * (1 + (gameState.danceLvl * 0.02)) *
-                     (1 + (gameState.filterLvl * 0.02)) * (1 + (gameState.meadLvl * 0.03)) *
-                     (1 + (gameState.hivenetLvl * 0.03)) * (1 + (gameState.waxLvl * 0.04)) *
-                     (1 + (gameState.jellyLvl * 0.05)) * (1 + (gameState.prestigeBoostLevel * 0.05)) *
-                     Formulas.getBeedexBonus();
+    const prodMult = Formulas.getGlobalItemProdMultiplier();
     const shopProdBonus = Math.round((prodMult - 1) * 100);
 
-    const artifactClickMult = 1 + ((artCounts["Aiguillon"] || 0) * 0.05);
+    const artCounts = Formulas.getArtifactCounts();
+    const artifactClickMult = 1 + ((artCounts["Aiguillon"] || 0) * Constants.ARTIFACT_RATES["Aiguillon"]);
     // Multiplicateur basé sur la puissance de base 1
     const clickBaseMult = (gameState.clickLevel + gameState.masteryClickBonus); 
-    const clickEquipMult = (1 + (gameState.glovesLvl * 0.05)) * (1 + (gameState.stingerLvl * 0.06)) * artifactClickMult;
+    const clickEquipMult = (1 + (gameState.glovesLvl * Constants.UPGRADE_RATES.gloves)) * (1 + (gameState.stingerLvl * Constants.UPGRADE_RATES.stinger)) * artifactClickMult;
     
     const shopClickBonus = Math.round((clickBaseMult * clickEquipMult - 1) * 100);
 
