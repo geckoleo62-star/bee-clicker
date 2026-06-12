@@ -12,6 +12,10 @@ export const PROD_DIVINE = 300; // Production par seconde d'une abeille divine
 
 export const CLICK_MAX_LEVEL = 30;
 
+// Centralisation des taux pour éviter les doublons entre formulas.js et ui.js
+export const FLOWER_BONUS_PRIMARY = 0.03;   // 3%
+export const FLOWER_BONUS_SECONDARY = 0.05; // 5%
+
 export const WEATHER_TYPES = [
     { name: "Soleil", desc: "Production +25%", prod: 1.25, click: 1.0, weight: 45 },
     { name: "Pluie", desc: "Clic +50% | Prod -20%", prod: 0.8, click: 1.5, weight: 25 },
