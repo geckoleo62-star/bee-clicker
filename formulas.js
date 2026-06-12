@@ -8,7 +8,6 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as UI from './ui.js';
 import * as Storage from './storage.js';
-import * as GameLogic from './gameLogic.js';
 
 export const MAX_LUCK_CAP = 50; // Augmentation du plafond pour laisser de la place à la progression
 
@@ -50,17 +49,37 @@ export function getTotalMissionTiersClaimed() {
     return total;
 }
 
+/**
+ * Calcule le multiplicateur cumulé des améliorations de production.
+ * Centralisé pour être utilisé par formulas.js et ui.js
+ */
+export function getGlobalItemProdMultiplier() {
+    return (1 + (gameState.honeycombLvl * Constants.UPGRADE_RATES.honeycomb)) *
+           (1 + (gameState.danceLvl * Constants.UPGRADE_RATES.dance)) *
+           (1 + (gameState.filterLvl * Constants.UPGRADE_RATES.filter)) *
+           (1 + (gameState.meadLvl * Constants.UPGRADE_RATES.mead)) *
+           (1 + (gameState.hivenetLvl * Constants.UPGRADE_RATES.hivenet)) *
+           (1 + (gameState.waxLvl * Constants.UPGRADE_RATES.wax)) *
+           (1 + (gameState.jellyLvl * Constants.UPGRADE_RATES.jelly)) *
+           (1 + (gameState.prestigeBoostLevel * Constants.UPGRADE_RATES.prestigeBoost)) *
+           getBeedexBonus();
+}
+
+export function getFlowerTierBonus(lvl1, lvl2) {
+    return (1 + (lvl1 * Constants.FLOWER_BONUS_PRIMARY) + (lvl2 * Constants.FLOWER_BONUS_SECONDARY));
+}
+
 export function getPrestigeMultiplier() {
     return Math.pow(2.3, gameState.royalJelly); // Ajusté pour une courbe de progression plus longue (cible Ascension 25)
 }
 
 export function getBaseCps() {
     const paradigm = getHiveParadigm();
-    let boostCommon = 1 + (gameState.lavenderLvl * Constants.FLOWER_BONUS_PRIMARY) + (gameState.lilyLvl * Constants.FLOWER_BONUS_SECONDARY);
-    let boostRare = 1 + (gameState.sunflowerLvl * Constants.FLOWER_BONUS_PRIMARY) + (gameState.tulipLvl * Constants.FLOWER_BONUS_SECONDARY);
-    let boostLegendary = 1 + (gameState.roseLvl * Constants.FLOWER_BONUS_PRIMARY) + (gameState.poppyLvl * Constants.FLOWER_BONUS_SECONDARY);
-    let boostMythic = 1 + (gameState.daisyLvl * Constants.FLOWER_BONUS_PRIMARY) + (gameState.lotusLvl * Constants.FLOWER_BONUS_SECONDARY);
-    let boostDivine = 1 + (gameState.orchidLvl * Constants.FLOWER_BONUS_PRIMARY) + (gameState.hibiscusLvl * Constants.FLOWER_BONUS_SECONDARY);
+    let boostCommon = getFlowerTierBonus(gameState.lavenderLvl, gameState.lilyLvl);
+    let boostRare = getFlowerTierBonus(gameState.sunflowerLvl, gameState.tulipLvl);
+    let boostLegendary = getFlowerTierBonus(gameState.roseLvl, gameState.poppyLvl);
+    let boostMythic = getFlowerTierBonus(gameState.daisyLvl, gameState.lotusLvl);
+    let boostDivine = getFlowerTierBonus(gameState.orchidLvl, gameState.hibiscusLvl);
 
     let globalFlowerMult = 1; 
     let base = 0;
@@ -89,17 +108,10 @@ export function getBaseCps() {
     
     // On récupère les comptes d'artefacts et les multiplicateurs
     const artCounts = getArtifactCounts();
-    const honeycombBonus = 1 + (gameState.honeycombLvl * 0.02);
-    const celestialBonus = 1 + (gameState.prestigeBoostLevel * 0.05);
-    const danceBonus = 1 + (gameState.danceLvl * 0.02);
-    const filterBonus = 1 + (gameState.filterLvl * 0.02);
-    const meadBonus = 1 + (gameState.meadLvl * 0.03);
-    const hivenetBonus = 1 + (gameState.hivenetLvl * 0.03);
-    const waxBonus = 1 + (gameState.waxLvl * 0.04);
-    const jellyBonus = 1 + (gameState.jellyLvl * 0.05);
+    const itemBonus = getGlobalItemProdMultiplier();
     
     const weatherData = getCurrentWeather();
-    const artifactBonus = 1 + ((artCounts["Vieux Pot"] || 0) * 0.10);
+    const artifactBonus = 1 + ((artCounts["Vieux Pot"] || 0) * Constants.ARTIFACT_RATES["Vieux Pot"]);
     const missionBonus = 1 + (getTotalMissionTiersClaimed() * 0.02);
     
     // Point n°7 : Conversion de la chance excédentaire en production (+0.25% par point au-delà du cap)
@@ -115,7 +127,7 @@ export function getBaseCps() {
     const levelMultiplier = 1 + (gameState.level - 1) * 0.01;
     const comboMultiplier = 1 + (Math.min(gameState.comboCount || 0, 25) * 0.01);
 
-    return base * celestialBonus * levelMultiplier * comboMultiplier * honeycombBonus * danceBonus * filterBonus * meadBonus * hivenetBonus * waxBonus * jellyBonus * weatherData.prod * artifactBonus * missionBonus * luckConversionBonus * beedexBonus * potionBonus * frenzyBonus;
+    return base * itemBonus * levelMultiplier * comboMultiplier * weatherData.prod * artifactBonus * missionBonus * luckConversionBonus * potionBonus * frenzyBonus;
 }
 
 export function getBeedexBonus() {
@@ -128,10 +140,10 @@ export function getClickPower() {
     const artCounts = getArtifactCounts();
     const weatherData = getCurrentWeather();  
     const potionBonus = gameState.activePotions.click > 0 ? 3 : 1;
-    const gloveBonus = 1 + (gameState.glovesLvl * 0.05);
-    const stingerBonus = 1 + (gameState.stingerLvl * 0.06);
-    const celestialBonus = 1 + (gameState.prestigeBoostLevel * 0.05);
-    const artifactBonus = 1 + ((artCounts["Aiguillon"] || 0) * 0.05);
+    const gloveBonus = 1 + (gameState.glovesLvl * Constants.UPGRADE_RATES.gloves);
+    const stingerBonus = 1 + (gameState.stingerLvl * Constants.UPGRADE_RATES.stinger);
+    const celestialBonus = 1 + (gameState.prestigeBoostLevel * Constants.UPGRADE_RATES.prestigeBoost);
+    const artifactBonus = 1 + ((artCounts["Aiguillon"] || 0) * Constants.ARTIFACT_RATES["Aiguillon"]);
     const paradigm = getHiveParadigm();
 
     // Puissance de base pure (commence à 1 au niveau 1)
@@ -195,11 +207,6 @@ export function addHoney(amount) {
     if (gameState.honey > gameState.maxHoneyReached) {
         gameState.maxHoneyReached = gameState.honey;
         const honeyDisplayDiv = UI.ui["honey"]?.parentElement; 
-        if (honeyDisplayDiv) {
-            honeyDisplayDiv.classList.remove("pulse-animation");
-            void honeyDisplayDiv.offsetWidth;
-            honeyDisplayDiv.classList.add("pulse-animation");
-        }
     }
     if (gameState.honey > gameState.highestHoneyEver) {
         gameState.highestHoneyEver = gameState.honey;
@@ -218,7 +225,6 @@ export function addExp(amount) {
         gameState.level++;
         gameState.expNextLevel = Math.max(1, Math.floor(100 * Math.pow(1.3, gameState.level - 1)));
         Utils.showNotification(`🎉 NIVEAU SUPÉRIEUR ! Vous êtes niveau ${gameState.level}`);
-        Utils.addLog(`✨ Niveau Supérieur ! Vous êtes maintenant niveau <b>${gameState.level}</b>.`, "level");
         Utils.playSound('levelup'); // Joue le son de passage de niveau
 
         // Déclenche l'animation visuelle sur le numéro de niveau
@@ -238,7 +244,6 @@ export function addExp(amount) {
         }
         levelsGained++;
     }
-    UI.updateXPUI();
 }
 
 export function getBulkCost(costKey, lvlKey, multiplier, maxLvl = Infinity) {
@@ -373,9 +378,7 @@ export function handleManualClick(e) {
     }
 
     addHoney(getClickPower());
-    addExp(1);
-    UI.updateDisplay();
-    Storage.queueSave();
+    addExp(1 * (1 + (gameState.royalJelly * 0.1))); // L'ascension boost l'XP gagnée au clic
 }
 
 export function buyBee() {
@@ -437,7 +440,7 @@ export function buyBee() {
         }
 
         gameState.totalBeesBought++;
-        tempBeeCost *= 1.15;
+        tempBeeCost *= Constants.BEE_COST_MULTIPLIER;
     }
 
     if (beesBought > 0) {
@@ -461,7 +464,6 @@ export function buyBee() {
             .join(', ');
 
         Utils.showNotification(`Acheté ${beesBought} abeille(s) : ${summary}`);
-        UI.updateDisplay(); Storage.queueSave();
     } else {
         Utils.showNotification("Miel insuffisant pour acheter des abeilles.");
     }
@@ -533,11 +535,10 @@ export function prestige() {
             gameState.prestigeBoostCost = 1500 * inflation;
 
             Storage.flushSave();
-            GameLogic.startAutoclickLoop(); // Redémarre la boucle d'autoclick de la Reine
-            UI.renderMissions();
-            UI.updateDisplay();
+            return true; // Indique au script.js que l'ascension a eu lieu
         }
     }
+    return false;
 }
 
 export function resetGame() {
@@ -565,21 +566,6 @@ export function getForceRainCost() {
     return Math.max(currentHPS * 600, 500000); // Coût : 10 minutes de HPS, min 500k
 }
 
-export function forceRain() {
-    const cost = getForceRainCost();
-
-    if (gameState.honey >= cost) {
-        if (confirm(`Voulez-vous dépenser ${Utils.formatNumber(cost)} 🍯 pour déclencher une pluie d'ingrédients maintenant ?`)) {
-            gameState.honey -= cost;
-            GameLogic.startIngredientRain();
-            GameLogic.scheduleNextRain(false, true); // Planifie la prochaine pluie après celle-ci
-            Utils.showNotification(`🌧️ Pluie forcée ! -${Utils.formatNumber(cost)} 🍯`);
-            UI.updateDisplay(); Storage.queueSave();
-        }
-    } else {
-        Utils.showNotification(`Miel insuffisant pour forcer une pluie. Requis : ${Utils.formatNumber(cost)} 🍯`, "warning");
-    }
-}
 
 /**
  * Gère l'activation des codes mécènes.
