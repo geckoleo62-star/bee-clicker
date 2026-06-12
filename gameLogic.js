@@ -273,7 +273,7 @@ export function spawnGoldenBee() {
         const reward = Formulas.getBaseCps() * Formulas.getPrestigeMultiplier() * Constants.GOLDEN_BEE_REWARD_SECONDS * nacreBonus; 
         gameState.discoveredBees.golden = true;
         Formulas.addHoney(reward);
-         gameState.activePotions.frenzy = Constants.GOLDEN_BEE_FRENZY_DURATION;
+        gameState.activePotions.frenzy = Constants.GOLDEN_BEE_FRENZY_DURATION;
         Utils.showNotification(`⚡ ABEILLE D'OR ! +${Utils.formatNumber(reward)} 🍯 et FRÉNÉSIE x5 (12s) !`, "frenzy");
         bee.remove();
         UI.updateDisplay();
@@ -410,6 +410,20 @@ export function handleDonatorAutoLoot() {
     items.forEach(item => {
         item.click();
     });
+}
+
+export function forceRain() {
+    const cost = Formulas.getForceRainCost();
+    if (gameState.honey >= cost) {
+        if (confirm(`Voulez-vous dépenser ${Utils.formatNumber(cost)} 🍯 pour déclencher une pluie d'ingrédients maintenant ?`)) {
+            gameState.honey -= cost;
+            startIngredientRain();
+            scheduleNextRain(false, true);
+            Utils.showNotification(`🌧️ Pluie forcée ! -${Utils.formatNumber(cost)} 🍯`);
+        }
+    } else {
+        Utils.showNotification(`Miel insuffisant pour forcer une pluie.`, "warning");
+    }
 }
 
 export function initGameLogicSystems() {
