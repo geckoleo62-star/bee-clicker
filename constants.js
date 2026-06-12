@@ -11,10 +11,30 @@ export const PROD_MYTHIC = 150; // Production par seconde d'une abeille mythique
 export const PROD_DIVINE = 300; // Production par seconde d'une abeille divine
 
 export const CLICK_MAX_LEVEL = 30;
+export const BEE_COST_MULTIPLIER = 1.15; // Inflation du prix des abeilles
 
 // Centralisation des taux pour éviter les doublons entre formulas.js et ui.js
 export const FLOWER_BONUS_PRIMARY = 0.03;   // 3%
 export const FLOWER_BONUS_SECONDARY = 0.05; // 5%
+
+// Taux de bonus des améliorations (Magasin)
+export const UPGRADE_RATES = {
+    honeycomb: 0.02,
+    dance: 0.02,
+    filter: 0.02,
+    mead: 0.03,
+    hivenet: 0.03,
+    wax: 0.04,
+    jelly: 0.05,
+    prestigeBoost: 0.05,
+    gloves: 0.05,
+    stinger: 0.06
+};
+
+export const ARTIFACT_RATES = {
+    "Aiguillon": 0.05,
+    "Vieux Pot": 0.10
+};
 
 export const WEATHER_TYPES = [
     { name: "Soleil", desc: "Production +25%", prod: 1.25, click: 1.0, weight: 45 },
