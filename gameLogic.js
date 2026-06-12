@@ -268,7 +268,7 @@ export function spawnGoldenBee() {
 
     bee.onclick = () => {
         Utils.playSound('golden');
-        const nacreBonus = 1 + ((Formulas.getArtifactCounts()["Aile de Nacre"] || 0) * 0.20);
+        const nacreBonus = 1 + ((Formulas.getArtifactCounts()["Aile de Nacre"] || 0) * 0.05);
 
         const reward = Formulas.getBaseCps() * Formulas.getPrestigeMultiplier() * Constants.GOLDEN_BEE_REWARD_SECONDS * nacreBonus; 
         gameState.discoveredBees.golden = true;
