@@ -56,11 +56,11 @@ export function getPrestigeMultiplier() {
 
 export function getBaseCps() {
     const paradigm = getHiveParadigm();
-    let boostCommon = 1 + (gameState.lavenderLvl * 0.05) + (gameState.lilyLvl * 0.08);
-    let boostRare = 1 + (gameState.sunflowerLvl * 0.05) + (gameState.tulipLvl * 0.08);
-    let boostLegendary = 1 + (gameState.roseLvl * 0.05) + (gameState.poppyLvl * 0.08);
-    let boostMythic = 1 + (gameState.daisyLvl * 0.05) + (gameState.lotusLvl * 0.08);
-    let boostDivine = 1 + (gameState.orchidLvl * 0.05) + (gameState.hibiscusLvl * 0.08);
+    let boostCommon = 1 + (gameState.lavenderLvl * 0.03) + (gameState.lilyLvl * 0.05);
+    let boostRare = 1 + (gameState.sunflowerLvl * 0.03) + (gameState.tulipLvl * 0.05);
+    let boostLegendary = 1 + (gameState.roseLvl * 0.03) + (gameState.poppyLvl * 0.05);
+    let boostMythic = 1 + (gameState.daisyLvl * 0.03) + (gameState.lotusLvl * 0.05);
+    let boostDivine = 1 + (gameState.orchidLvl * 0.03) + (gameState.hibiscusLvl * 0.05);
 
     let globalFlowerMult = 1; 
     let base = 0;
