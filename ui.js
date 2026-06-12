@@ -397,7 +397,7 @@ export function renderArtifacts() {
         if (art === "Aiguillon") { icon = "🗡️"; desc = `Aiguillon : +5% Puissance de clic (x${counts[art]})`; }
         else if (art === "Vieux Pot") { icon = "🏺"; desc = `Vieux Pot : +10% Production Miel (x${counts[art]})`; }
         else if (art === "Pollen d'Or") { icon = "✨"; desc = `Pollen d'Or : +0.5 Chance ✨ (x${counts[art]})`; }
-        else if (art === "Aile de Nacre") { icon = "💸"; desc = `Aile de Nacre : +20% Gains Abeille d'Or (x${counts[art]})`; }
+        else if (art === "Aile de Nacre") { icon = "💸"; desc = `Aile de Nacre : +5% Gains Abeille d'Or (x${counts[art]})`; }
 
         item.setAttribute("data-tooltip", desc);
         
