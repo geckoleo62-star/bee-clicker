@@ -126,11 +126,11 @@ export function updateDisplay() {
     setTxt("cost-bees", Utils.formatNumber(totalBeeCost) + suffix);
     setBtn("btn-buy-bee", gameState.honey < totalBeeCost);
 
-    const commonBonus = (gameState.lavenderLvl * 5) + (gameState.lilyLvl * 8);
-    const rareBonus = (gameState.sunflowerLvl * 5) + (gameState.tulipLvl * 8);
-    const legendaryBonus = (gameState.roseLvl * 5) + (gameState.poppyLvl * 8);
-    const mythicBonus = (gameState.daisyLvl * 5) + (gameState.lotusLvl * 8);
-    const divineBonus = (gameState.orchidLvl * 5) + (gameState.hibiscusLvl * 8);
+    const commonBonus = (gameState.lavenderLvl * 3) + (gameState.lilyLvl * 5);
+    const rareBonus = (gameState.sunflowerLvl * 3) + (gameState.tulipLvl * 5);
+    const legendaryBonus = (gameState.roseLvl * 3) + (gameState.poppyLvl * 5);
+    const mythicBonus = (gameState.daisyLvl * 3) + (gameState.lotusLvl * 5);
+    const divineBonus = (gameState.orchidLvl * 3) + (gameState.hibiscusLvl * 5);
 
     setTxt("garden-common-bonus", commonBonus);
     setTxt("garden-rare-bonus", rareBonus);
